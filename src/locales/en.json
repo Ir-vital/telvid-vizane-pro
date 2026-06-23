@@ -1,0 +1,72 @@
+{
+  "app": {
+    "title": "TelVid-Vizane"
+  },
+  "search": {
+    "placeholder": "Paste a URL or drag here...",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing...",
+    "detected": "Detected platform"
+  },
+  "formats": {
+    "title": "Choose format",
+    "hd": "HD 1080p",
+    "sd": "SD 480p",
+    "audio": "Audio MP3 320kbps",
+    "turbo": "Turbo Mode",
+    "turbo_desc": "16 simultaneous connections",
+    "premium_required": "Premium required",
+    "download": "Download"
+  },
+  "queue": {
+    "title": "Downloads",
+    "empty": "No active downloads",
+    "speed": "Speed",
+    "eta": "ETA",
+    "pause": "Pause",
+    "cancel": "Cancel",
+    "status": {
+      "downloading": "Downloading",
+      "converting": "Converting",
+      "done": "Done",
+      "error": "Error"
+    }
+  },
+  "library": {
+    "title": "Library",
+    "empty": "No downloaded videos",
+    "play": "Play",
+    "open_folder": "Open folder",
+    "delete": "Delete",
+    "delete_confirm": "Delete this file?"
+  },
+  "converter": {
+    "title": "Converter",
+    "drop_hint": "Drop a file here",
+    "to_mp4": "Video → MP4",
+    "to_mp3": "Video → MP3",
+    "quality": "Quality",
+    "convert": "Convert",
+    "converting": "Converting..."
+  },
+  "player": {
+    "preview": "Preview",
+    "unsupported": "Unsupported format — open with VLC"
+  },
+  "premium": {
+    "free": "Free",
+    "premium": "Premium",
+    "upgrade": "Upgrade to Premium",
+    "limit_480p": "Limited to 480p on free plan"
+  },
+  "notifications": {
+    "download_complete": "Download complete",
+    "conversion_complete": "Conversion complete",
+    "error": "An error occurred"
+  },
+  "settings": {
+    "language": "Language",
+    "download_folder": "Download folder",
+    "concurrent": "Concurrent downloads"
+  }
+}

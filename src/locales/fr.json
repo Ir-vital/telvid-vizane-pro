@@ -1,0 +1,72 @@
+{
+  "app": {
+    "title": "TelVid-Vizane"
+  },
+  "search": {
+    "placeholder": "Coller une URL ou glisser ici...",
+    "analyze": "Analyser",
+    "analyzing": "Analyse en cours...",
+    "detected": "Plateforme détectée"
+  },
+  "formats": {
+    "title": "Choisir le format",
+    "hd": "HD 1080p",
+    "sd": "SD 480p",
+    "audio": "Audio MP3 320kbps",
+    "turbo": "Mode Turbo",
+    "turbo_desc": "16 connexions simultanées",
+    "premium_required": "Premium requis",
+    "download": "Télécharger"
+  },
+  "queue": {
+    "title": "Téléchargements",
+    "empty": "Aucun téléchargement en cours",
+    "speed": "Vitesse",
+    "eta": "Temps restant",
+    "pause": "Pause",
+    "cancel": "Annuler",
+    "status": {
+      "downloading": "Téléchargement",
+      "converting": "Conversion",
+      "done": "Terminé",
+      "error": "Erreur"
+    }
+  },
+  "library": {
+    "title": "Bibliothèque",
+    "empty": "Aucune vidéo téléchargée",
+    "play": "Lire",
+    "open_folder": "Ouvrir le dossier",
+    "delete": "Supprimer",
+    "delete_confirm": "Supprimer ce fichier ?"
+  },
+  "converter": {
+    "title": "Convertisseur",
+    "drop_hint": "Glisser un fichier ici",
+    "to_mp4": "Vidéo → MP4",
+    "to_mp3": "Vidéo → MP3",
+    "quality": "Qualité",
+    "convert": "Convertir",
+    "converting": "Conversion..."
+  },
+  "player": {
+    "preview": "Prévisualisation",
+    "unsupported": "Format non supporté — ouvrir avec VLC"
+  },
+  "premium": {
+    "free": "Gratuit",
+    "premium": "Premium",
+    "upgrade": "Passer Premium",
+    "limit_480p": "Limité à 480p en version gratuite"
+  },
+  "notifications": {
+    "download_complete": "Téléchargement terminé",
+    "conversion_complete": "Conversion terminée",
+    "error": "Une erreur est survenue"
+  },
+  "settings": {
+    "language": "Langue",
+    "download_folder": "Dossier de téléchargement",
+    "concurrent": "Téléchargements simultanés"
+  }
+}

@@ -1,0 +1,10 @@
+# Place yt-dlp, aria2c, and ffmpeg binaries here for each target platform.
+# Naming convention (Tauri sidecar):
+#   yt-dlp-x86_64-pc-windows-msvc.exe
+#   aria2c-x86_64-pc-windows-msvc.exe
+#   ffmpeg-x86_64-pc-windows-msvc.exe
+#
+# Download from:
+#   yt-dlp:  https://github.com/yt-dlp/yt-dlp/releases
+#   aria2c:  https://github.com/aria2/aria2/releases
+#   ffmpeg:  https://ffmpeg.org/download.html
