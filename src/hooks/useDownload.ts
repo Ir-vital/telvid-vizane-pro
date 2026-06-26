@@ -100,7 +100,12 @@ export function useDownload() {
     setDownloadPhase("downloading");
 
     // Détermine la qualité lisible
-    const quality = extractAudio ? "320kbps" : formatId.includes("1080") ? "1080p" : "480p";
+    let quality = "720p";
+    if (extractAudio) {
+      quality = "320kbps";
+    } else if (formatId === "bestvideo+bestaudio/best") {
+      quality = "MAX";  // Qualité originale
+    }
 
     try {
       const id = await tauriApi.startDownload({

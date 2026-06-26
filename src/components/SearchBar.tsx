@@ -65,14 +65,23 @@ const HINTS: Partial<Record<DownloadPhase, { text: string; color: string }>> = {
 // ─── SearchBar ────────────────────────────────────────────────────────────────
 export function SearchBar() {
   const { handleMainAction, analyzeUrl } = useDownload();
-  const { currentUrl, setCurrentUrl, downloadPhase, videoInfo } = useDownloadStore();
+  const { currentUrl, setCurrentUrl, downloadPhase, videoInfo, premium, addToast } = useDownloadStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const [justPasted, setJustPasted] = useState(false);
 
   const platform = detectPlatform(currentUrl);
   const btn      = getBtnConfig(downloadPhase);
   const isBusy   = downloadPhase === "analyzing" || downloadPhase === "downloading";
-  const hint     = HINTS[downloadPhase];
+  
+  // Compter les URLs multiples (séparées par nouvelle ligne)
+  const urlLines = currentUrl.split('\n').filter(u => u.trim().startsWith('http'));
+  const isMultiUrl = urlLines.length > 1;
+  
+  // Hint dynamique
+  let hint = HINTS[downloadPhase];
+  if (isMultiUrl && downloadPhase === "ready") {
+    hint = { text: `${urlLines.length} URLs prêtes — ${premium?.is_premium ? '⚡ Simultanés' : 'Séquentiel'}`, color: "#f59e0b" };
+  }
 
   // ── Gestion du submit ──
   const handleSubmit = (e: React.FormEvent) => {
@@ -80,17 +89,30 @@ export function SearchBar() {
     if (!btn.disabled) handleMainAction();
   };
 
-  // ── Paste intelligent : détecte URL et lance l'analyse automatiquement ──
+  // ── Paste intelligent : détecte URLs multiples et lance l'analyse ──
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData("text").trim();
     if (!text.startsWith("http")) return;
 
-    // On laisse React mettre à jour l'input, puis on analyse
+    // Vérifie si plusieurs URLs
+    const urls = text.split('\n').filter(u => u.trim().startsWith('http'));
+    
+    if (urls.length > 1) {
+      // Mode multi : ajouter toutes les URLs à la queue
+      setCurrentUrl(text);
+      setJustPasted(true);
+      setTimeout(() => setJustPasted(false), 2000);
+      addToast({ message: `${urls.length} URLs détectées — Prêt pour ${premium?.is_premium ? 'téléchargements simultanés' : 'téléchargement simple'}`, type: "info" });
+      return;
+    }
+
+    // URL simple
+    setCurrentUrl(text);
     setJustPasted(true);
     setTimeout(() => {
       setJustPasted(false);
       analyzeUrl(text);
-    }, 320); // délai court pour que l'animation "URL détectée" soit visible
+    }, 320);
   };
 
   // ── Drop ──
