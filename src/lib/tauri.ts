@@ -67,6 +67,8 @@ export interface PremiumStatus {
   concurrent_downloads: number;
   expires_at: string | null;
   license_type: string;
+  days_remaining: number;
+  machine_id: string;
 }
 
 export interface ActivationResult {

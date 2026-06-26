@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Zap, Copy } from "lucide-react";
+import { X, Zap, Copy, Clock, Check, ShoppingCart } from "lucide-react";
 import { useDownloadStore } from "../stores/downloadStore";
 import { tauriApi } from "../lib/tauri";
 
@@ -11,6 +11,7 @@ export function PremiumModal() {
   const [copied, setCopied] = useState(false);
   const [demoKey, setDemoKey] = useState<string | null>(null);
 
+  // Génère la clé démo quand on ouvre l'onglet activation
   useEffect(() => {
     if (tab === "activate" && !premium?.is_premium && !demoKey) {
       generateDemoKey();
@@ -31,11 +32,19 @@ export function PremiumModal() {
     setActivating(true);
     try {
       const result = await tauriApi.activateLicense(licenseKey.trim());
+      
       if (result.success) {
+        // Met à jour le store avec le nouveau statut
         setPremium(result.status);
         addToast({ message: result.message, type: "success" });
-        setPremiumOpen(false);
-        setLicenseKey("");
+        
+        // Ferme le popup après une courte pause pour que l'utilisateur voie le succès
+        setTimeout(() => {
+          setPremiumOpen(false);
+          setLicenseKey("");
+          setDemoKey(null);
+          setTab("compare");
+        }, 1500);
       } else {
         addToast({ message: result.message, type: "error" });
       }
@@ -63,6 +72,8 @@ export function PremiumModal() {
   if (!premiumOpen) return null;
 
   const isPremium = premium?.is_premium;
+  const isDemo = premium?.license_type === "demo";
+  const daysRemaining = premium?.days_remaining ?? 0;
 
   return (
     <div style={{
@@ -96,10 +107,22 @@ export function PremiumModal() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Zap size={20} color="#f59e0b" />
+            <Zap size={20} color={isPremium ? "#34d399" : "#f59e0b"} />
             <span style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>
               {isPremium ? "Premium Activé" : "TelVid Premium"}
             </span>
+            {isPremium && (
+              <span style={{
+                fontSize: 10,
+                fontWeight: 600,
+                padding: "2px 8px",
+                borderRadius: 99,
+                background: isDemo ? "rgba(139,92,246,0.2)" : "rgba(52,211,153,0.2)",
+                color: isDemo ? "#a78bfa" : "#34d399",
+              }}>
+                {isDemo ? `DÉMO • ${daysRemaining}j restants` : "À VIE"}
+              </span>
+            )}
           </div>
           <button
             onClick={() => setPremiumOpen(false)}
@@ -127,29 +150,63 @@ export function PremiumModal() {
           padding: 20,
         }}>
           {isPremium ? (
-            <div style={{
-              textAlign: "center",
-              padding: "40px 20px",
-            }}>
+            <div style={{ textAlign: "center" }}>
+              {/* Badge de succès */}
               <div style={{
-                width: 64,
-                height: 64,
+                width: 72,
+                height: 72,
                 borderRadius: "50%",
-                background: "rgba(52,211,153,0.1)",
-                border: "2px solid rgba(52,211,153,0.3)",
+                background: isDemo ? "rgba(139,92,246,0.1)" : "rgba(52,211,153,0.1)",
+                border: `2px solid ${isDemo ? "rgba(139,92,246,0.3)" : "rgba(52,211,153,0.3)"}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 margin: "0 auto 16px",
               }}>
-                <Zap size={28} color="#34d399" />
+                <Check size={32} color={isDemo ? "#a78bfa" : "#34d399"} />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#34d399", margin: "0 0 8px" }}>
-                Licence Premium Active
+              
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: isDemo ? "#a78bfa" : "#34d399", margin: "0 0 8px" }}>
+                {isDemo ? `Licence Démo Active` : "Licence Premium Active"}
               </h3>
-              <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
-                Toutes les fonctionnalités sont débloquées
+              
+              {isDemo && (
+                <p style={{ fontSize: 14, color: "#94a3b8", margin: "0 0 4px" }}>
+                  <Clock size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
+                  {daysRemaining} jours restants
+                </p>
+              )}
+              
+              <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 20px" }}>
+                {isDemo 
+                  ? "Profitez de toutes les fonctionnalités Premium !" 
+                  : "Toutes les fonctionnalités sont débloquées"
+                }
               </p>
+              
+              {isDemo && (
+                <button
+                  onClick={() => setTab("activate")}
+                  style={{
+                    width: "100%",
+                    padding: 14,
+                    borderRadius: 12,
+                    border: "1px solid rgba(245,158,11,0.3)",
+                    background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(249,115,22,0.1))",
+                    color: "#f59e0b",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <ShoppingCart size={16} />
+                  Acheter Premium (1 an)
+                </button>
+              )}
             </div>
           ) : tab === "compare" ? (
             <div>
@@ -217,11 +274,14 @@ export function PremiumModal() {
                 borderRadius: 12,
                 marginBottom: 16,
               }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#a78bfa", margin: "0 0 4px" }}>
-                  Essai gratuit - 7 jours
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                  <Zap size={16} color="#a78bfa" />
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#a78bfa", margin: 0 }}>
+                    Essai gratuit - 7 jours
+                  </p>
+                </div>
                 <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 12px" }}>
-                  Testez toutes les fonctionnalités Premium
+                  Testez toutes les fonctionnalités Premium sans engagement
                 </p>
 
                 {demoKey && (
@@ -236,7 +296,7 @@ export function PremiumModal() {
                   }}>
                     <code style={{
                       flex: 1,
-                      fontSize: 10,
+                      fontSize: 9,
                       fontFamily: "monospace",
                       color: "#94a3b8",
                       wordBreak: "break-all",
@@ -277,7 +337,7 @@ export function PremiumModal() {
                   }}
                 >
                   <Zap size={14} />
-                  Activer la démo
+                  Activer la démo gratuite
                 </button>
               </div>
 
@@ -293,6 +353,43 @@ export function PremiumModal() {
                 <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
               </div>
 
+              {/* Acheter section */}
+              <div style={{
+                padding: 16,
+                background: "rgba(245,158,11,0.08)",
+                borderRadius: 12,
+                border: "1px solid rgba(245,158,11,0.2)",
+                marginBottom: 16,
+              }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#f59e0b", margin: "0 0 4px" }}>
+                  Licence Premium
+                </p>
+                <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 8px" }}>
+                  Accès à vie • Sans expiration
+                </p>
+                <button
+                  onClick={() => addToast({ message: "Bientôt disponible !", type: "info" })}
+                  style={{
+                    width: "100%",
+                    padding: 10,
+                    borderRadius: 8,
+                    border: "1px solid rgba(245,158,11,0.3)",
+                    background: "transparent",
+                    color: "#f59e0b",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                >
+                  <ShoppingCart size={14} />
+                  Acheter maintenant
+                </button>
+              </div>
+
               {/* Manual activation */}
               <div>
                 <p style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", margin: "0 0 8px" }}>
@@ -302,7 +399,7 @@ export function PremiumModal() {
                   type="text"
                   value={licenseKey}
                   onChange={e => setLicenseKey(e.target.value)}
-                  placeholder="Entrez votre clé"
+                  placeholder="XXXXXXXXXXXXXXXX"
                   onKeyDown={e => e.key === "Enter" && handleActivate()}
                   style={{
                     width: "100%",
@@ -335,7 +432,7 @@ export function PremiumModal() {
                     opacity: activating ? 0.7 : 1,
                   }}
                 >
-                  {activating ? "Vérification..." : "Activer"}
+                  {activating ? "Vérification..." : "Activer la licence"}
                 </button>
               </div>
 
