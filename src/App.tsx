@@ -12,6 +12,7 @@ import { PremiumBanner } from "./components/PremiumBanner";
 import { PremiumModal } from "./components/PremiumModal";
 import { useDownloadStore } from "./stores/downloadStore";
 import { useDownload } from "./hooks/useDownload";
+import { usePremium } from "./hooks/usePremium";
 import { tauriApi } from "./lib/tauri";
 
 function PremiumBadge() {
@@ -39,6 +40,9 @@ function PremiumBadge() {
 export default function App() {
   const { setCurrentUrl, setOutputPath, setSettingsOpen } = useDownloadStore();
   const { analyzeUrl } = useDownload();
+  
+  // Charge le statut Premium au démarrage
+  usePremium();
 
   // Charge le dossier de téléchargement au démarrage
   useEffect(() => {
