@@ -153,13 +153,15 @@ export function PremiumModal() {
               position: "fixed",
               top: "50%", left: "50%",
               transform: "translate(-50%, -50%)",
-              width: 540, maxHeight: "90vh",
+              width: 540,
+              maxHeight: "85vh",
               zIndex: 301,
               background: "var(--layer-1)",
               borderRadius: 22,
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 24px 80px rgba(0,0,0,0.6)",
-              display: "flex", flexDirection: "column",
+              display: "flex",
+              flexDirection: "column",
               overflow: "hidden",
             }}
           >
