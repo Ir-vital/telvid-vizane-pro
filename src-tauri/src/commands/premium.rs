@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::time::{SystemTime, UNIX_EPOCH};
-use sha2::{Sha256, Digest};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,15 +24,7 @@ pub struct ActivationResult {
     pub status: PremiumStatus,
 }
 
-#[derive(Debug, Clone)]
-struct LicenseData {
-    license_type: String,
-    expires_at: Option<u64>,
-    machine_id: String,
-    original_key_hash: String,
-}
-
-// ─── Chemins fichiers ─────────────────────────────────────────────────────────
+// ─── Chemins ──────────────────────────────────────────────────────────────────
 
 fn get_app_data_dir() -> std::path::PathBuf {
     let mut path = dirs_next::data_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
@@ -50,72 +41,46 @@ fn get_machine_id_path() -> std::path::PathBuf {
     get_app_data_dir().join("machine.id")
 }
 
-fn get_used_keys_path() -> std::path::PathBuf {
-    get_app_data_dir().join("used_keys.txt")
-}
-
 // ─── Machine ID ───────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn get_machine_id() -> String {
     let path = get_machine_id_path();
     
-    // Si le fichier machine.id existe, le lire
     if let Ok(content) = std::fs::read_to_string(&path) {
         let content = content.trim();
-        if !content.is_empty() && content.len() >= 16 {
+        if !content.is_empty() && content.len() >= 8 {
             return content.to_string();
         }
     }
     
-    // Générer un nouvel ID machine unique
     let machine_id = generate_machine_id();
-    
-    // Sauvegarder pour persistance
-    if let Err(e) = std::fs::write(&path, &machine_id) {
-        eprintln!("Warning: Could not save machine ID: {}", e);
-    }
-    
+    let _ = std::fs::write(&path, &machine_id);
     machine_id
 }
 
 fn generate_machine_id() -> String {
     let mut hasher = DefaultHasher::new();
     
-    // Combine plusieurs sources pour créer un ID unique
-    #[cfg(target_os = "linux")]
-    {
-        if let Ok(uuid) = std::fs::read_to_string("/sys/class/dmi/id/product_uuid") {
-            uuid.trim().hash(&mut hasher);
-        }
-        if let Ok(mac) = std::fs::read_to_string("/sys/class/net/eth0/address") {
-            mac.trim().to_lowercase().hash(&mut hasher);
-        }
-    }
-    
     #[cfg(target_os = "windows")]
     {
-        // Utiliser des informations Windows
-        if let Ok(computer_name) = std::env::var("COMPUTERNAME") {
-            computer_name.hash(&mut hasher);
+        if let Ok(name) = std::env::var("COMPUTERNAME") {
+            name.hash(&mut hasher);
         }
         if let Ok(user) = std::env::var("USERNAME") {
             user.hash(&mut hasher);
         }
     }
     
-    // Timestamp d'installation
-    let install_time = std::fs::metadata(".")
-        .and_then(|m| m.created())
-        .or_else(|_| std::fs::metadata(".").and_then(|m| m.modified()))
-        .map(|t| t.duration_since(UNIX_EPOCH).unwrap().as_secs())
-        .unwrap_or(0);
-    install_time.hash(&mut hasher);
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(uuid) = std::fs::read_to_string("/sys/class/dmi/id/product_uuid") {
+            uuid.trim().hash(&mut hasher);
+        }
+    }
     
-    format!("{:016x}-{:08x}", hasher.finish(), std::process::id())
+    format!("{:016x}", hasher.finish())
 }
-
-// ─── Temps ────────────────────────────────────────────────────────────────────
 
 fn current_timestamp() -> u64 {
     SystemTime::now()
@@ -124,36 +89,34 @@ fn current_timestamp() -> u64 {
         .as_secs()
 }
 
-// ─── Hashing ──────────────────────────────────────────────────────────────────
-
-const SECRET_KEY: &str = "telvid-vizane-2024-secure-key";
+// ─── Hashing Simple ──────────────────────────────────────────────────────────
 
 fn simple_hash(input: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(input.as_bytes());
-    let result = hasher.finalize();
-    hex_encode(&result[..16])
+    let mut hasher = DefaultHasher::new();
+    input.hash(&mut hasher);
+    format!("{:016x}", hasher.finish())
 }
 
-fn generate_signature(payload: &str) -> String {
-    simple_hash(&format!("{}{}", payload, SECRET_KEY))
+fn make_signature(data: &str) -> String {
+    simple_hash(&format!("telvid-2024:{}", data))
 }
 
-fn verify_signature(payload: &str, signature: &str) -> bool {
-    generate_signature(payload) == signature
+fn check_signature(data: &str, sig: &str) -> bool {
+    make_signature(data) == sig
 }
 
-fn hash_key(key: &str) -> String {
-    simple_hash(&key.to_uppercase())
+// ─── Licence JSON ─────────────────────────────────────────────────────────────
+
+#[derive(Debug, Serialize, Deserialize)]
+struct License {
+    #[serde(rename = "type")]
+    license_type: String,
+    expiry: u64,
+    machine_id: String,
+    signature: String,
 }
 
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
-}
-
-// ─── Lecture licence ───────────────────────────────────────────────────────────
-
-fn read_license() -> Option<LicenseData> {
+fn read_license_file() -> Option<License> {
     let path = get_license_path();
     if !path.exists() {
         return None;
@@ -164,76 +127,15 @@ fn read_license() -> Option<LicenseData> {
         Err(_) => return None,
     };
 
-    // Le format est: "type|expiry|machine_id|key_hash:signature"
-    // On cherche le dernier ":" pour séparer payload de signature
-    if let Some(colon_pos) = content.rfind(':') {
-        let payload = content[..colon_pos].trim();
-        let signature = content[colon_pos + 1..].trim();
-        
-        if !verify_signature(payload, signature) {
-            eprintln!("Invalid license signature!");
-            return None;
-        }
+    serde_json::from_str(&content).ok()
+}
 
-        // Parse: "type|expiry|machine_id|key_hash"
-        let parts: Vec<&str> = payload.split('|').collect();
-        if parts.len() < 4 {
-            // Ancien format sans pipe - try avec :
-            let old_parts: Vec<&str> = payload.split(':').collect();
-            if old_parts.len() < 4 {
-                return None;
-            }
-            let license_type = old_parts[0].to_string();
-            let expiry_timestamp: u64 = old_parts[1].parse().unwrap_or(0);
-            let machine_id = old_parts.get(2).unwrap_or(&"").to_string();
-            let original_key_hash = old_parts.get(3).unwrap_or(&"").to_string();
-            
-            if expiry_timestamp > 0 && expiry_timestamp <= current_timestamp() {
-                eprintln!("License expired!");
-                return None;
-            }
-            
-            let current_machine = get_machine_id();
-            if !machine_id.is_empty() && machine_id != current_machine {
-                eprintln!("License is for a different machine!");
-                return None;
-            }
-
-            return Some(LicenseData {
-                license_type,
-                expires_at: if expiry_timestamp == 0 { None } else { Some(expiry_timestamp) },
-                machine_id,
-                original_key_hash,
-            });
-        }
-
-        let license_type = parts[0].to_string();
-        let expiry_timestamp: u64 = parts[1].parse().unwrap_or(0);
-        let machine_id = parts[2].to_string();
-        let original_key_hash = parts[3].to_string();
-
-        // Vérifie expiration
-        if expiry_timestamp > 0 && expiry_timestamp <= current_timestamp() {
-            eprintln!("License expired!");
-            return None;
-        }
-
-        // Vérifie machine
-        let current_machine = get_machine_id();
-        if !machine_id.is_empty() && machine_id != current_machine {
-            eprintln!("License is for a different machine!");
-            return None;
-        }
-
-        Some(LicenseData {
-            license_type,
-            expires_at: if expiry_timestamp == 0 { None } else { Some(expiry_timestamp) },
-            machine_id,
-            original_key_hash,
-        })
-    } else {
-        None
-    }
+fn write_license_file(license: &License) -> std::io::Result<()> {
+    let path = get_license_path();
+    let content = serde_json::to_string_pretty(license).map_err(|e| {
+        std::io::Error::new(std::io::ErrorKind::InvalidData, e)
+    })?;
+    std::fs::write(&path, content)
 }
 
 // ─── Statut Premium ────────────────────────────────────────────────────────────
@@ -242,82 +144,62 @@ fn read_license() -> Option<LicenseData> {
 pub fn check_premium_status() -> PremiumStatus {
     let machine_id = get_machine_id();
     
-    match read_license() {
-        Some(license) => {
-            let days_remaining = calculate_days_remaining(license.expires_at);
-            let expiry_str = license.expires_at.map(|ts| {
-                chrono::DateTime::from_timestamp(ts as i64, 0)
-                    .map(|dt| dt.to_rfc3339())
-                    .unwrap_or_default()
-            });
-
+    match read_license_file() {
+        Some(lic) => {
+            // Vérifie signature
+            let data = format!("{}:{}:{}", lic.license_type, lic.expiry, lic.machine_id);
+            if !check_signature(&data, &lic.signature) {
+                eprintln!("Invalid license signature!");
+                return free_status(&machine_id);
+            }
+            
+            // Vérifie expiration
+            if lic.expiry > 0 && lic.expiry <= current_timestamp() {
+                eprintln!("License expired!");
+                return free_status(&machine_id);
+            }
+            
+            // Vérifie machine
+            if !lic.machine_id.is_empty() && lic.machine_id != machine_id {
+                eprintln!("License for different machine!");
+                return free_status(&machine_id);
+            }
+            
+            let days = if lic.expiry == 0 {
+                -1 // Illimité
+            } else {
+                ((lic.expiry - current_timestamp()) / 86400) as i32
+            };
+            
             PremiumStatus {
                 is_premium: true,
                 max_resolution: "unlimited".to_string(),
                 turbo_mode: true,
                 concurrent_downloads: 5,
-                expires_at: expiry_str,
-                license_type: license.license_type.clone(),
-                days_remaining,
+                expires_at: if lic.expiry == 0 { None } else {
+                    chrono::DateTime::from_timestamp(lic.expiry as i64, 0)
+                        .map(|dt| dt.to_rfc3339())
+                },
+                license_type: lic.license_type,
+                days_remaining: days.max(0),
                 machine_id,
             }
         }
-        None => {
-            PremiumStatus {
-                is_premium: false,
-                max_resolution: "480p".to_string(),
-                turbo_mode: false,
-                concurrent_downloads: 2,
-                expires_at: None,
-                license_type: "free".to_string(),
-                days_remaining: 0,
-                machine_id,
-            }
-        }
+        None => free_status(&machine_id),
     }
 }
 
-fn calculate_days_remaining(expires_at: Option<u64>) -> i32 {
-    match expires_at {
-        None => -1, // Illimité
-        Some(ts) => {
-            let now = current_timestamp();
-            if ts <= now {
-                0
-            } else {
-                ((ts - now) / (24 * 60 * 60)) as i32
-            }
-        }
+fn free_status(machine_id: &str) -> PremiumStatus {
+    PremiumStatus {
+        is_premium: false,
+        max_resolution: "480p".to_string(),
+        turbo_mode: false,
+        concurrent_downloads: 2,
+        expires_at: None,
+        license_type: "free".to_string(),
+        days_remaining: 0,
+        machine_id: machine_id.to_string(),
     }
-}
-
-// ─── Vérification code utilisé ─────────────────────────────────────────────────
-
-fn is_demo_key_used(key_hash: &str) -> bool {
-    let path = get_used_keys_path();
-    if let Ok(content) = std::fs::read_to_string(&path) {
-        content.lines().any(|line| line.trim() == key_hash)
-    } else {
-        false
-    }
-}
-
-fn mark_key_as_used(key_hash: &str) -> Result<(), String> {
-    let path = get_used_keys_path();
-    let mut content = String::new();
-    
-    if path.exists() {
-        content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
-    }
-    
-    if !content.is_empty() && !content.ends_with('\n') {
-        content.push('\n');
-    }
-    content.push_str(key_hash);
-    content.push('\n');
-    
-    std::fs::write(&path, content).map_err(|e| e.to_string())?;
-    Ok(())
 }
 
 // ─── Activation ────────────────────────────────────────────────────────────────
@@ -325,83 +207,88 @@ fn mark_key_as_used(key_hash: &str) -> Result<(), String> {
 #[tauri::command]
 pub fn activate_license(license_key: String) -> ActivationResult {
     let machine_id = get_machine_id();
-    let current_status = check_premium_status();
+    let current = check_premium_status();
     
-    if current_status.is_premium {
+    if current.is_premium {
         return ActivationResult {
             success: false,
             message: "Vous avez déjà une licence active.".to_string(),
-            status: current_status,
+            status: current,
         };
     }
 
-    let license_key = license_key.trim().to_uppercase();
-    
-    if license_key.is_empty() {
+    let key = license_key.trim().to_uppercase();
+    if key.is_empty() {
         return ActivationResult {
             success: false,
-            message: "La clé de licence ne peut pas être vide.".to_string(),
-            status: current_status,
+            message: "Clé vide.".to_string(),
+            status: current,
         };
     }
 
-    let (license_type, duration_days) = match parse_license_key(&license_key) {
-        (Some(t), d) => (t, d),
-        (None, _) => {
-            return ActivationResult {
-                success: false,
-                message: "Clé de licence invalide. Vérifiez et réessayez.".to_string(),
-                status: current_status,
-            };
-        }
+    // Parse: type:jours ou type|jours
+    let parts: Vec<&str> = key.split(|c| c == ':' || c == '|').collect();
+    if parts.len() < 2 {
+        return ActivationResult {
+            success: false,
+            message: "Clé invalide.".to_string(),
+            status: current,
+        };
+    }
+    
+    let lic_type = parts[0].to_lowercase();
+    let days: u32 = parts[1].parse().unwrap_or(7);
+    
+    if lic_type != "demo" && lic_type != "premium" {
+        return ActivationResult {
+            success: false,
+            message: "Type de clé inconnu.".to_string(),
+            status: current,
+        };
+    }
+
+    let expiry = if days == 0 {
+        0 // Jamais
+    } else {
+        current_timestamp() + (days as u64 * 86400)
     };
 
-    let key_hash = hash_key(&license_key);
-
-    // Pour les clés démo, vérifier si déjà utilisée
-    if license_type == "demo" && is_demo_key_used(&key_hash) {
-        return ActivationResult {
-            success: false,
-            message: "Cette clé démo a déjà été utilisée sur cette machine.".to_string(),
-            status: current_status,
-        };
-    }
-
-    let expiry_timestamp = if duration_days == 0 {
-        0
-    } else {
-        current_timestamp() + (duration_days as u64 * 24 * 60 * 60)
+    // Crée la licence
+    let license = License {
+        license_type: lic_type.clone(),
+        expiry,
+        machine_id: machine_id.clone(),
+        signature: String::new(),
     };
 
-    let payload = format!("{}|{}|{}|{}", license_type, expiry_timestamp, machine_id, key_hash);
-    let signature = generate_signature(&payload);
-    let license_content = format!("{}:{}", payload, signature);
+    // Génère signature
+    let data = format!("{}:{}:{}", license.license_type, license.expiry, license.machine_id);
+    let signature = make_signature(&data);
+    
+    let license = License {
+        signature,
+        ..license
+    };
 
-    let license_path = get_license_path();
-    if let Err(e) = std::fs::write(&license_path, &license_content) {
+    if let Err(e) = write_license_file(&license) {
         return ActivationResult {
             success: false,
-            message: format!("Erreur lors de l'activation: {}", e),
-            status: current_status,
+            message: format!("Erreur: {}", e),
+            status: current,
         };
     }
 
-    if license_type == "demo" {
-        let _ = mark_key_as_used(&key_hash);
-    }
-
-    let new_status = check_premium_status();
-    
-    let message = if license_type == "demo" {
-        format!("Licence démo activée ! {} jours restants.", new_status.days_remaining)
+    let status = check_premium_status();
+    let message = if lic_type == "demo" {
+        format!("Licence démo activée ! {} jours.", status.days_remaining)
     } else {
-        "Licence Premium activée avec succès !".to_string()
+        "Licence Premium activée !".to_string()
     };
 
     ActivationResult {
         success: true,
         message,
-        status: new_status,
+        status,
     }
 }
 
@@ -409,35 +296,29 @@ pub fn activate_license(license_key: String) -> ActivationResult {
 
 #[tauri::command]
 pub fn deactivate_license() -> Result<bool, String> {
-    let license_path = get_license_path();
-    if license_path.exists() {
-        std::fs::remove_file(&license_path).map_err(|e| format!("Erreur: {}", e))?;
+    let path = get_license_path();
+    if path.exists() {
+        std::fs::remove_file(&path).map_err(|e| e.to_string())?;
     }
     Ok(true)
 }
 
-// ─── Génération clé démo ───────────────────────────────────────────────────────
+// ─── Génération démo ─────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn generate_demo_license(days: u32) -> String {
-    let demo_type = "demo";
-    let expiry = current_timestamp() + ((days as u64) * 24 * 60 * 60);
-    let machine_id = get_machine_id();
-    let key_hash = format!("DEMO-{:016x}", current_timestamp());
-    
-    let payload = format!("{}|{}|{}|{}", demo_type, expiry, machine_id, key_hash);
-    let signature = generate_signature(&payload);
-    format!("{}:{}", payload, signature)
+    let d = if days == 0 { 7 } else { days.min(30) };
+    format!("demo:{}", d)
 }
 
-// ─── Info licence ───────────────────────────────────────────────────────────────
+// ─── Info ─────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn get_license_info() -> Result<PremiumStatus, String> {
     Ok(check_premium_status())
 }
 
-// ─── Génération de clés pour le vendeur ──────────────────────────────────────
+// ─── Génération pour vendeur ──────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn generate_license_for_machine(
@@ -445,66 +326,10 @@ pub fn generate_license_for_machine(
     license_type: String,
     duration_days: u32,
 ) -> Result<String, String> {
-    // Cette commande permet au vendeur de générer une clé pour une machine spécifique
-    // Elle ne devrait être appelée que via un système sécurisé (API backend)
-    
-    let expiry_timestamp = if duration_days == 0 {
-        0
-    } else {
-        current_timestamp() + (duration_days as u64 * 24 * 60 * 60)
-    };
-
-    // Génère un hash unique pour cette clé
-    let key_hash = {
-        let mut hasher = DefaultHasher::new();
-        format!("{}:{}:{}", machine_id, license_type, current_timestamp()).hash(&mut hasher);
-        format!("{:016x}", hasher.finish())
-    };
-
-    let payload = format!("{}:{}:{}:{}", license_type, expiry_timestamp, machine_id, key_hash);
-    let signature = generate_signature(&payload);
-    Ok(format!("{}:{}", payload, signature))
-}
-
-// ─── Parsing des clés ──────────────────────────────────────────────────────────
-
-fn parse_license_key(key: &str) -> (Option<String>, u32) {
-    let clean_key = key.replace('-', "").replace(' ', "").replace('_', "").to_uppercase();
-    
-    // Format démo: DEMO, DEMO7, DEMO30
-    if clean_key.starts_with("DEMO") {
-        let days = if clean_key.len() > 4 {
-            clean_key[4..]
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .unwrap_or(7)
-        } else {
-            7
-        };
-        return (Some("demo".to_string()), days.min(30));
+    let lic_type = license_type.to_lowercase();
+    if lic_type != "demo" && lic_type != "premium" {
+        return Err("Type invalide".to_string());
     }
-    
-    // Format premium: PREM, PREM365, FULL
-    if clean_key.starts_with("PREM") || clean_key.starts_with("FULL") {
-        let days = if clean_key.len() > 4 {
-            clean_key[4..]
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .unwrap_or(365)
-        } else {
-            365
-        };
-        return (Some("premium".to_string()), days);
-    }
-    
-    // Clé 16-32 caractères alphanumériques = premium à vie
-    if clean_key.len() >= 16 && clean_key.len() <= 32 && clean_key.chars().all(|c| c.is_alphanumeric()) {
-        return (Some("premium".to_string()), 0);
-    }
-    
-    (None, 0)
+    let days = if duration_days == 0 { 365 } else { duration_days };
+    Ok(format!("{}:{}", lic_type, days))
 }
