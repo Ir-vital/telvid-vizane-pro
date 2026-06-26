@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::time::{SystemTime, UNIX_EPOCH};
+use sha2::{Sha256, Digest};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -125,21 +126,29 @@ fn current_timestamp() -> u64 {
 
 // ─── Hashing ──────────────────────────────────────────────────────────────────
 
-fn hash_key(key: &str) -> String {
-    let mut hasher = DefaultHasher::new();
-    key.to_uppercase().hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
+const SECRET_KEY: &str = "telvid-vizane-2024-secure-key";
+
+fn simple_hash(input: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(input.as_bytes());
+    let result = hasher.finalize();
+    hex_encode(&result[..16])
 }
 
 fn generate_signature(payload: &str) -> String {
-    let secret = "telvid-vizane-secret-2024-v2";
-    let mut hasher = DefaultHasher::new();
-    format!("{}:{}", payload, secret).hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
+    simple_hash(&format!("{}{}", payload, SECRET_KEY))
 }
 
 fn verify_signature(payload: &str, signature: &str) -> bool {
     generate_signature(payload) == signature
+}
+
+fn hash_key(key: &str) -> String {
+    simple_hash(&key.to_uppercase())
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 // ─── Lecture licence ───────────────────────────────────────────────────────────
