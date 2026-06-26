@@ -83,30 +83,36 @@ export function Onboarding() {
               position: "fixed",
               top: "50%", left: "50%",
               transform: "translate(-50%, -50%)",
-              width: 420, zIndex: 401,
+              width: "90vw",
+              maxWidth: 420,
+              maxHeight: "85vh",
+              zIndex: 401,
               background: "var(--layer-1)",
               borderRadius: 24,
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 0 0 1px rgba(59,130,246,0.1), 0 32px 80px rgba(0,0,0,0.7)",
+              display: "flex",
+              flexDirection: "column",
               overflow: "hidden",
             }}
           >
-            {/* Barre de progression */}
-            <div style={{ display: "flex", gap: 4, padding: "20px 24px 0 24px" }}>
-              {STEPS.map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1, height: 3, borderRadius: 99,
-                    background: i <= step ? current.color : "rgba(255,255,255,0.08)",
-                    transition: "background 0.3s",
-                  }}
-                />
-              ))}
-            </div>
+            {/* Contenu scrollable */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+              
+              {/* Barre de progression */}
+              <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+                {STEPS.map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1, height: 3, borderRadius: 99,
+                      background: i <= step ? current.color : "rgba(255,255,255,0.08)",
+                      transition: "background 0.3s",
+                    }}
+                  />
+                ))}
+              </div>
 
-            {/* Contenu */}
-            <div style={{ padding: "32px 32px 28px 32px" }}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -118,21 +124,21 @@ export function Onboarding() {
                 >
                   {/* Icône */}
                   <div style={{
-                    width: 64, height: 64, borderRadius: 18,
+                    width: 56, height: 56, borderRadius: 16,
                     background: `${current.color}18`,
                     border: `1px solid ${current.color}30`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     color: current.color,
-                    boxShadow: `0 0 24px ${current.color}20`,
+                    boxShadow: `0 0 20px ${current.color}15`,
                   }}>
                     {current.icon}
                   </div>
 
                   {/* Texte */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{
-                        fontSize: 11, fontWeight: 700, color: current.color,
+                        fontSize: 10, fontWeight: 700, color: current.color,
                         background: `${current.color}15`,
                         padding: "2px 8px", borderRadius: 99,
                         letterSpacing: "0.06em", textTransform: "uppercase",
@@ -140,10 +146,10 @@ export function Onboarding() {
                         Étape {step + 1} / {STEPS.length}
                       </span>
                     </div>
-                    <h2 style={{ fontSize: 22, fontWeight: 800, color: "#f1f5f9", margin: 0, letterSpacing: "-0.02em" }}>
+                    <h2 style={{ fontSize: 20, fontWeight: 800, color: "#f1f5f9", margin: 0, letterSpacing: "-0.02em" }}>
                       {current.title}
                     </h2>
-                    <p style={{ fontSize: 14, color: "#64748b", margin: 0, lineHeight: 1.65 }}>
+                    <p style={{ fontSize: 13, color: "#64748b", margin: 0, lineHeight: 1.6 }}>
                       {current.desc}
                     </p>
                   </div>
@@ -151,7 +157,7 @@ export function Onboarding() {
               </AnimatePresence>
 
               {/* Actions */}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 32 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 24 }}>
                 <button
                   onClick={handleDone}
                   style={{
@@ -171,7 +177,7 @@ export function Onboarding() {
                   onClick={handleNext}
                   style={{
                     display: "flex", alignItems: "center", gap: 8,
-                    padding: "11px 22px", borderRadius: 12, border: "none",
+                    padding: "10px 20px", borderRadius: 12, border: "none",
                     fontSize: 13, fontWeight: 700, cursor: "pointer",
                     background: step === STEPS.length - 1
                       ? "linear-gradient(135deg, #34d399, #10b981)"
