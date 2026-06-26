@@ -153,9 +153,38 @@ export function PremiumModal() {
             </div>
           ) : tab === "compare" ? (
             <div>
-              <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 20px", textAlign: "center" }}>
-                Débloquez les téléchargements HD, le mode Turbo et les téléchargements simultanés.
-              </p>
+              {/* Tableau comparatif */}
+              <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 20 }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "left", padding: "8px 0", fontSize: 11, color: "#475569", fontWeight: 600 }}></th>
+                    <th style={{ textAlign: "center", padding: "8px 4px", fontSize: 10, color: "#475569", fontWeight: 600 }}>GRATUIT</th>
+                    <th style={{ textAlign: "center", padding: "8px 4px", fontSize: 10, color: "#f59e0b", fontWeight: 700 }}>PREMIUM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: "10px 8px", fontSize: 13, color: "#94a3b8", borderTop: "1px solid rgba(255,255,255,0.06)" }}>Qualité vidéo</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#475569", borderTop: "1px solid rgba(255,255,255,0.06)" }}>480p</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#f1f5f9", fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.06)" }}>1080p+</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "10px 8px", fontSize: 13, color: "#94a3b8", borderTop: "1px solid rgba(255,255,255,0.06)" }}>Téléchargements simultanés</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#475569", borderTop: "1px solid rgba(255,255,255,0.06)" }}>2</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#f1f5f9", fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.06)" }}>5</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "10px 8px", fontSize: 13, color: "#94a3b8", borderTop: "1px solid rgba(255,255,255,0.06)" }}>Mode Turbo</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#475569", borderTop: "1px solid rgba(255,255,255,0.06)" }}>✗</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#34d399", fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.06)" }}>✓</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "10px 8px", fontSize: 13, color: "#94a3b8", borderTop: "1px solid rgba(255,255,255,0.06)" }}>Conversions FFmpeg</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#475569", borderTop: "1px solid rgba(255,255,255,0.06)" }}>Basique</td>
+                    <td style={{ textAlign: "center", padding: "10px 4px", fontSize: 12, color: "#f1f5f9", fontWeight: 600, borderTop: "1px solid rgba(255,255,255,0.06)" }}>Accélérée</td>
+                  </tr>
+                </tbody>
+              </table>
 
               <button
                 onClick={() => setTab("activate")}
