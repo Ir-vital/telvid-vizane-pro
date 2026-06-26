@@ -164,49 +164,76 @@ fn read_license() -> Option<LicenseData> {
         Err(_) => return None,
     };
 
-    let parts: Vec<&str> = content.trim().splitn(2, ':').collect();
-    if parts.len() != 2 {
-        return None;
+    // Le format est: "type|expiry|machine_id|key_hash:signature"
+    // On cherche le dernier ":" pour séparer payload de signature
+    if let Some(colon_pos) = content.rfind(':') {
+        let payload = content[..colon_pos].trim();
+        let signature = content[colon_pos + 1..].trim();
+        
+        if !verify_signature(payload, signature) {
+            eprintln!("Invalid license signature!");
+            return None;
+        }
+
+        // Parse: "type|expiry|machine_id|key_hash"
+        let parts: Vec<&str> = payload.split('|').collect();
+        if parts.len() < 4 {
+            // Ancien format sans pipe - try avec :
+            let old_parts: Vec<&str> = payload.split(':').collect();
+            if old_parts.len() < 4 {
+                return None;
+            }
+            let license_type = old_parts[0].to_string();
+            let expiry_timestamp: u64 = old_parts[1].parse().unwrap_or(0);
+            let machine_id = old_parts.get(2).unwrap_or(&"").to_string();
+            let original_key_hash = old_parts.get(3).unwrap_or(&"").to_string();
+            
+            if expiry_timestamp > 0 && expiry_timestamp <= current_timestamp() {
+                eprintln!("License expired!");
+                return None;
+            }
+            
+            let current_machine = get_machine_id();
+            if !machine_id.is_empty() && machine_id != current_machine {
+                eprintln!("License is for a different machine!");
+                return None;
+            }
+
+            return Some(LicenseData {
+                license_type,
+                expires_at: if expiry_timestamp == 0 { None } else { Some(expiry_timestamp) },
+                machine_id,
+                original_key_hash,
+            });
+        }
+
+        let license_type = parts[0].to_string();
+        let expiry_timestamp: u64 = parts[1].parse().unwrap_or(0);
+        let machine_id = parts[2].to_string();
+        let original_key_hash = parts[3].to_string();
+
+        // Vérifie expiration
+        if expiry_timestamp > 0 && expiry_timestamp <= current_timestamp() {
+            eprintln!("License expired!");
+            return None;
+        }
+
+        // Vérifie machine
+        let current_machine = get_machine_id();
+        if !machine_id.is_empty() && machine_id != current_machine {
+            eprintln!("License is for a different machine!");
+            return None;
+        }
+
+        Some(LicenseData {
+            license_type,
+            expires_at: if expiry_timestamp == 0 { None } else { Some(expiry_timestamp) },
+            machine_id,
+            original_key_hash,
+        })
+    } else {
+        None
     }
-
-    let payload = parts[0];
-    let signature = parts[1];
-
-    if !verify_signature(payload, signature) {
-        eprintln!("Invalid license signature!");
-        return None;
-    }
-
-    // Parse: "type:expiry:machine_id:key_hash"
-    let license_parts: Vec<&str> = payload.split(':').collect();
-    if license_parts.len() < 4 {
-        return None;
-    }
-
-    let license_type = license_parts[0].to_string();
-    let expiry_timestamp: u64 = license_parts[1].parse().unwrap_or(0);
-    let machine_id = license_parts[2].to_string();
-    let original_key_hash = license_parts[3].to_string();
-
-    // Vérifie expiration
-    if expiry_timestamp > 0 && expiry_timestamp <= current_timestamp() {
-        eprintln!("License expired!");
-        return None;
-    }
-
-    // Vérifie machine
-    let current_machine = get_machine_id();
-    if !machine_id.is_empty() && machine_id != current_machine {
-        eprintln!("License is for a different machine!");
-        return None;
-    }
-
-    Some(LicenseData {
-        license_type,
-        expires_at: if expiry_timestamp == 0 { None } else { Some(expiry_timestamp) },
-        machine_id,
-        original_key_hash,
-    })
 }
 
 // ─── Statut Premium ────────────────────────────────────────────────────────────
@@ -346,7 +373,7 @@ pub fn activate_license(license_key: String) -> ActivationResult {
         current_timestamp() + (duration_days as u64 * 24 * 60 * 60)
     };
 
-    let payload = format!("{}:{}:{}:{}", license_type, expiry_timestamp, machine_id, key_hash);
+    let payload = format!("{}|{}|{}|{}", license_type, expiry_timestamp, machine_id, key_hash);
     let signature = generate_signature(&payload);
     let license_content = format!("{}:{}", payload, signature);
 
@@ -398,7 +425,7 @@ pub fn generate_demo_license(days: u32) -> String {
     let machine_id = get_machine_id();
     let key_hash = format!("DEMO-{:016x}", current_timestamp());
     
-    let payload = format!("{}:{}:{}:{}", demo_type, expiry, machine_id, key_hash);
+    let payload = format!("{}|{}|{}|{}", demo_type, expiry, machine_id, key_hash);
     let signature = generate_signature(&payload);
     format!("{}:{}", payload, signature)
 }
