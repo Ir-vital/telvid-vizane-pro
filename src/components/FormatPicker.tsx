@@ -8,9 +8,9 @@ import { useDownload } from "../hooks/useDownload";
 // ─── Définition des formats ───────────────────────────────────────────────────
 const FORMATS = [
   {
-    id: "bestvideo[height<=1080]+bestaudio/best[height<=1080]",
-    label: "HD 1080p",
-    sublabel: "Meilleure qualité",
+    id: "bestvideo+bestaudio/best",  // Qualité maximale YouTube
+    label: "HD Maximum",
+    sublabel: "Qualité originale",
     icon: <MonitorPlay size={20} />,
     premium: true,
     extractAudio: false,
@@ -20,9 +20,9 @@ const FORMATS = [
     accentGlow: 'rgba(139,92,246,0.2)',
   },
   {
-    id: "bestvideo[height<=480]+bestaudio/best[height<=480]",
-    label: "SD 480p",
-    sublabel: "Taille réduite",
+    id: "bestvideo[height<=720]+bestaudio/best[height<=720]",
+    label: "HD 720p",
+    sublabel: "Bon compromis",
     icon: <MonitorPlay size={20} />,
     premium: false,
     extractAudio: false,
@@ -160,7 +160,11 @@ export function FormatPicker() {
   const { t } = useTranslation();
   const { premium, turboMode, setTurboMode } = useDownloadStore();
   const { startDownload } = useDownload();
-  const [selected, setSelected] = useState(FORMATS[1].id);
+  
+  // Sélectionne HD Maximum si premium, sinon HD 720p
+  const [selected, setSelected] = useState(() => 
+    premium?.is_premium ? FORMATS[0].id : FORMATS[1].id
+  );
   const [isDownloading, setIsDownloading] = useState(false);
 
   const selectedFormat = FORMATS.find((f) => f.id === selected)!;
