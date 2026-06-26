@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Lock, Zap, Music, MonitorPlay, Headphones } from "lucide-react";
+import { Download, Lock, Zap, MonitorPlay, Headphones } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDownloadStore } from "../stores/downloadStore";
 import { useDownload } from "../hooks/useDownload";

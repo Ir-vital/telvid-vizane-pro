@@ -65,6 +65,14 @@ export interface PremiumStatus {
   max_resolution: string;
   turbo_mode: boolean;
   concurrent_downloads: number;
+  expires_at: string | null;
+  license_type: string;
+}
+
+export interface ActivationResult {
+  success: boolean;
+  message: string;
+  status: PremiumStatus;
 }
 
 export const tauriApi = {
@@ -78,6 +86,10 @@ export const tauriApi = {
   openFile: (path: string) => invoke<void>("open_file", { path }),
   openFolder: (path: string) => invoke<void>("open_folder", { path }),
   checkPremiumStatus: () => invoke<PremiumStatus>("check_premium_status"),
+  activateLicense: (licenseKey: string) => invoke<ActivationResult>("activate_license", { licenseKey }),
+  deactivateLicense: () => invoke<boolean>("deactivate_license"),
+  generateDemoLicense: (days: number) => invoke<string>("generate_demo_license", { days }),
+  getLicenseInfo: () => invoke<PremiumStatus>("get_license_info"),
   refreshLibraryMetadata: () => invoke<number>("refresh_library_metadata"),
   getDownloadDir: () => invoke<string>("get_download_dir"),
   setDownloadDir: (path: string) => invoke<string>("set_download_dir", { path }),

@@ -6,7 +6,7 @@ import { useDownloadStore } from "../stores/downloadStore";
 import { tauriApi } from "../lib/tauri";
 
 export function Settings() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const {
     settingsOpen, setSettingsOpen,
     outputPath, setOutputPath,

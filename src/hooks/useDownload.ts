@@ -72,7 +72,7 @@ export function useDownload() {
 
   // Action principale du bouton unique
   const handleMainAction = async () => {
-    const { currentUrl, downloadPhase, videoInfo } = useDownloadStore.getState();
+    const { currentUrl, downloadPhase } = useDownloadStore.getState();
 
     if (downloadPhase === "ready") {
       // Étape 1 : analyser

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle, AlertCircle, Film, Zap, Music2, Video, Clock, Wifi } from "lucide-react";
+import { X, CheckCircle, AlertCircle, Film, Zap, Music2, Clock, Wifi } from "lucide-react";
 import { useDownloadStore, type ActiveDownload } from "../stores/downloadStore";
 import { tauriApi } from "../lib/tauri";
 
