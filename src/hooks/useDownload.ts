@@ -97,7 +97,6 @@ export function useDownload() {
     }
 
     const downloadPath = outputPath || await tauriApi.getDownloadDir().catch(() => ".");
-    setDownloadPhase("downloading");
 
     // Détermine la qualité lisible
     let quality = "720p";
@@ -137,6 +136,11 @@ export function useDownload() {
         status: "queued",
         status_label: "En attente...",
       });
+      
+      // Reset pour permettre un nouveau téléchargement
+      setDownloadPhase("ready");
+      setVideoInfo(null);
+      
     } catch (e) {
       addToast({ message: String(e), type: "error" });
       setDownloadPhase("pick_format");
