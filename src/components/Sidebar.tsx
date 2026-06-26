@@ -427,7 +427,7 @@ function EmptyLibrary() {
 
 export function Sidebar() {
   const { t } = useTranslation();
-  const { sidebarTab, setSidebarTab, setPlayerVideo, playerVideo } = useDownloadStore();
+  const { sidebarTab, setSidebarTab, playerVideo } = useDownloadStore();
   const { library, deleteVideo, openFolder, refresh } = useLibrary();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshStatus, setRefreshStatus] = useState<RefreshProgress | null>(null);
@@ -570,7 +570,7 @@ export function Sidebar() {
                   >
                     <VideoCard
                       video={video}
-                      onPlay={() => setPlayerVideo(video)}
+                      onPlay={() => tauriApi.openFile(video.file_path)}
                       onOpenFolder={() => openFolder(video.file_path)}
                       onDelete={() => deleteVideo(video.id)}
                     />
