@@ -55,7 +55,7 @@ fn get_used_keys_path() -> std::path::PathBuf {
 
 // ─── Machine ID ───────────────────────────────────────────────────────────────
 
-fn get_machine_id() -> String {
+pub fn get_machine_id() -> String {
     let path = get_machine_id_path();
     
     // Si le fichier machine.id existe, le lire
@@ -81,13 +81,14 @@ fn generate_machine_id() -> String {
     let mut hasher = DefaultHasher::new();
     
     // Combine plusieurs sources pour créer un ID unique
-    if let Ok(hostname) = hostname::get() {
-        hostname.to_string_lossy().to_string().hash(&mut hasher);
-    }
-    
     #[cfg(target_os = "linux")]
-    if let Ok(uuid) = std::fs::read_to_string("/sys/class/dmi/id/product_uuid") {
-        uuid.trim().hash(&mut hasher);
+    {
+        if let Ok(uuid) = std::fs::read_to_string("/sys/class/dmi/id/product_uuid") {
+            uuid.trim().hash(&mut hasher);
+        }
+        if let Ok(mac) = std::fs::read_to_string("/sys/class/net/eth0/address") {
+            mac.trim().to_lowercase().hash(&mut hasher);
+        }
     }
     
     #[cfg(target_os = "windows")]
@@ -402,11 +403,6 @@ pub fn get_license_info() -> Result<PremiumStatus, String> {
 // ─── Génération de clés pour le vendeur ──────────────────────────────────────
 
 #[tauri::command]
-pub fn get_machine_id() -> String {
-    crate::commands::premium::get_machine_id()
-}
-
-#[tauri::command]
 pub fn generate_license_for_machine(
     machine_id: String,
     license_type: String,
@@ -430,7 +426,7 @@ pub fn generate_license_for_machine(
 
     let payload = format!("{}:{}:{}:{}", license_type, expiry_timestamp, machine_id, key_hash);
     let signature = generate_signature(&payload);
-    format!("{}:{}", payload, signature)
+    Ok(format!("{}:{}", payload, signature))
 }
 
 // ─── Parsing des clés ──────────────────────────────────────────────────────────
