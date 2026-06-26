@@ -1,36 +1,7 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap, Check, Lock, Download, Layers, Copy, Sparkles, Clock } from "lucide-react";
+import { X, Zap, Copy } from "lucide-react";
 import { useDownloadStore } from "../stores/downloadStore";
 import { tauriApi } from "../lib/tauri";
-
-// ─── Données ──────────────────────────────────────────────────────────────────
-
-const FEATURES = [
-  {
-    icon: <Download size={12} />,
-    title: "Qualité",
-    free: "480p",
-    premium: "1080p+",
-    color: "#8b5cf6",
-  },
-  {
-    icon: <Layers size={12} />,
-    title: "Simultanés",
-    free: "2",
-    premium: "5",
-    color: "#3b82f6",
-  },
-  {
-    icon: <Zap size={12} />,
-    title: "Turbo",
-    free: "✗",
-    premium: "✓",
-    color: "#f59e0b",
-  },
-];
-
-// ─── PremiumModal ─────────────────────────────────────────────────────────────
 
 export function PremiumModal() {
   const { premiumOpen, setPremiumOpen, premium, setPremium, addToast } = useDownloadStore();
@@ -40,7 +11,6 @@ export function PremiumModal() {
   const [copied, setCopied] = useState(false);
   const [demoKey, setDemoKey] = useState<string | null>(null);
 
-  // Génère une clé démo au chargement de l'onglet activation
   useEffect(() => {
     if (tab === "activate" && !premium?.is_premium && !demoKey) {
       generateDemoKey();
@@ -90,411 +60,276 @@ export function PremiumModal() {
     }
   };
 
-  const formatExpiryDate = (isoDate: string | null) => {
-    if (!isoDate) return "Jamais";
-    try {
-      return new Date(isoDate).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return isoDate;
-    }
-  };
+  if (!premiumOpen) return null;
+
+  const isPremium = premium?.is_premium;
 
   return (
-    <AnimatePresence>
-      {premiumOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    <div style={{
+      position: "fixed",
+      inset: 0,
+      zIndex: 300,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "rgba(1,11,24,0.85)",
+      backdropFilter: "blur(8px)",
+    }}>
+      <div style={{
+        width: "90vw",
+        maxWidth: 500,
+        maxHeight: "90vh",
+        background: "#040e1f",
+        borderRadius: 20,
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.6)",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Zap size={20} color="#f59e0b" />
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>
+              {isPremium ? "Premium Activé" : "TelVid Premium"}
+            </span>
+          </div>
+          <button
             onClick={() => setPremiumOpen(false)}
             style={{
-              position: "fixed", inset: 0, zIndex: 300,
-              background: "rgba(1,8,20,0.82)",
-              backdropFilter: "blur(8px)",
-            }}
-          />
-
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 20 }}
-            transition={{ type: "spring", stiffness: 280, damping: 28 }}
-            style={{
-              position: "fixed",
-              top: "50%", left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "90vw",
-              maxWidth: 480,
-              maxHeight: "90vh",
-              zIndex: 301,
-              background: "var(--layer-1)",
-              borderRadius: 20,
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 24px 80px rgba(0,0,0,0.6)",
+              background: "rgba(255,255,255,0.06)",
+              border: "none",
+              borderRadius: 8,
+              width: 32,
+              height: 32,
               display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "#64748b",
             }}
           >
-            {/* Ligne décorative */}
-            <div style={{
-              height: 3,
-              background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #f59e0b, #06b6d4)",
-              flexShrink: 0,
-            }} />
+            <X size={16} />
+          </button>
+        </div>
 
-            {/* Header */}
+        {/* Content */}
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: 20,
+        }}>
+          {isPremium ? (
             <div style={{
-              padding: "16px 20px",
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              flexShrink: 0,
+              textAlign: "center",
+              padding: "40px 20px",
             }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 10,
-                    background: premium?.is_premium
-                      ? "linear-gradient(135deg, rgba(52,211,153,0.2), rgba(16,185,129,0.1))"
-                      : "linear-gradient(135deg, rgba(245,158,11,0.2), rgba(251,191,36,0.1))",
-                    border: premium?.is_premium
-                      ? "1px solid rgba(52,211,153,0.3)"
-                      : "1px solid rgba(245,158,11,0.3)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    {premium?.is_premium ? (
-                      <Check size={17} color="#34d399" />
-                    ) : (
-                      <Zap size={17} color="#f59e0b" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 800, color: "#f1f5f9", margin: 0, letterSpacing: "-0.02em" }}>
-                      {premium?.is_premium ? "Premium Activé" : "TelVid Premium"}
-                    </h2>
-                    <p style={{ fontSize: 11, color: "#475569", margin: 0 }}>
-                      {premium?.is_premium
-                        ? `Licence ${premium.license_type} • Expire: ${formatExpiryDate(premium.expires_at)}`
-                        : "Débloquez toutes les fonctionnalités"
-                      }
-                    </p>
-                  </div>
-                </div>
+              <div style={{
+                width: 64,
+                height: 64,
+                borderRadius: "50%",
+                background: "rgba(52,211,153,0.1)",
+                border: "2px solid rgba(52,211,153,0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+              }}>
+                <Zap size={28} color="#34d399" />
               </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: "#34d399", margin: "0 0 8px" }}>
+                Licence Premium Active
+              </h3>
+              <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>
+                Toutes les fonctionnalités sont débloquées
+              </p>
+            </div>
+          ) : tab === "compare" ? (
+            <div>
+              <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 20px", textAlign: "center" }}>
+                Débloquez les téléchargements HD, le mode Turbo et les téléchargements simultanés.
+              </p>
+
               <button
-                onClick={() => setPremiumOpen(false)}
+                onClick={() => setTab("activate")}
                 style={{
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 8, cursor: "pointer", color: "#64748b",
-                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.15s", flexShrink: 0,
+                  width: "100%",
+                  padding: 14,
+                  borderRadius: 12,
+                  border: "none",
+                  background: "linear-gradient(135deg, #f59e0b, #f97316)",
+                  color: "white",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#f1f5f9"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#64748b"; }}
               >
-                <X size={15} />
+                <Zap size={16} />
+                Activer Premium
               </button>
             </div>
-
-            {/* Tabs - seulement si pas premium */}
-            {!premium?.is_premium && (
+          ) : (
+            <div>
+              {/* Demo section */}
               <div style={{
-                display: "flex", margin: "0 20px 12px 20px",
-                background: "rgba(255,255,255,0.04)",
-                borderRadius: 8, padding: 3,
-                flexShrink: 0,
+                padding: 16,
+                background: "linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.08))",
+                borderRadius: 12,
+                marginBottom: 16,
               }}>
-                {[
-                  { key: "compare", label: "Comparer" },
-                  { key: "activate", label: "Activer" },
-                ].map((t) => (
-                  <button
-                    key={t.key}
-                    onClick={() => setTab(t.key as "compare" | "activate")}
-                    style={{
-                      flex: 1, padding: "6px 0", borderRadius: 6,
-                      fontSize: 11, fontWeight: 600, cursor: "pointer",
-                      border: "none", transition: "all 0.18s",
-                      background: tab === t.key ? "rgba(255,255,255,0.08)" : "transparent",
-                      color: tab === t.key ? "#f1f5f9" : "#475569",
-                      boxShadow: tab === t.key ? "0 1px 4px rgba(0,0,0,0.2)" : "none",
-                    }}
-                  >
-                    {t.label}
-                  </button>
-                ))}
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#a78bfa", margin: "0 0 4px" }}>
+                  Essai gratuit - 7 jours
+                </p>
+                <p style={{ fontSize: 11, color: "#64748b", margin: "0 0 12px" }}>
+                  Testez toutes les fonctionnalités Premium
+                </p>
+
+                {demoKey && (
+                  <div style={{
+                    background: "rgba(0,0,0,0.3)",
+                    borderRadius: 8,
+                    padding: "8px 12px",
+                    marginBottom: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}>
+                    <code style={{
+                      flex: 1,
+                      fontSize: 10,
+                      fontFamily: "monospace",
+                      color: "#94a3b8",
+                      wordBreak: "break-all",
+                    }}>
+                      {demoKey}
+                    </code>
+                    <button
+                      onClick={handleCopyKey}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 4,
+                        cursor: "pointer",
+                        color: copied ? "#34d399" : "#64748b",
+                      }}
+                    >
+                      <Copy size={14} />
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleActivateDemo}
+                  style={{
+                    width: "100%",
+                    padding: 12,
+                    borderRadius: 10,
+                    border: "none",
+                    background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                    color: "white",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Zap size={14} />
+                  Activer la démo
+                </button>
               </div>
-            )}
 
-            {/* Content - scrollable */}
-            <div style={{ 
-              flex: 1, 
-              minHeight: 0,
-              overflowY: "auto", 
-              padding: "0 16px 16px 16px" 
-            }}>
-              <AnimatePresence mode="wait">
+              {/* Divider */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                margin: "16px 0",
+              }}>
+                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+                <span style={{ fontSize: 11, color: "#334155" }}>ou</span>
+                <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+              </div>
 
-                {/* ── Onglet Comparer ── */}
-                {(tab === "compare" || premium?.is_premium) && (
-                  <motion.div
-                    key="compare"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    transition={{ duration: 0.18 }}
-                    style={{ display: "flex", flexDirection: "column", gap: 6 }}
-                  >
-                    {/* Lignes de features - compact */}
-                    {FEATURES.map((f, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
-                          background: "rgba(255,255,255,0.025)", borderRadius: 8,
-                          border: "1px solid rgba(255,255,255,0.05)",
-                        }}
-                      >
-                        <div style={{
-                          width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                          background: `${f.color}15`,
-                          border: `1px solid ${f.color}25`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          color: f.color,
-                        }}>
-                          {f.icon}
-                        </div>
-                        <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: "#94a3b8" }}>
-                          {f.title}
-                        </span>
-                        <span style={{ fontSize: 11, color: "#475569", minWidth: 50, textAlign: "center" }}>{f.free}</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 60, justifyContent: "flex-end" }}>
-                          <Check size={10} color="#34d399" />
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9" }}>{f.premium}</span>
-                        </div>
-                      </div>
-                    ))}
+              {/* Manual activation */}
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", margin: "0 0 8px" }}>
+                  Clé de licence
+                </p>
+                <input
+                  type="text"
+                  value={licenseKey}
+                  onChange={e => setLicenseKey(e.target.value)}
+                  placeholder="Entrez votre clé"
+                  onKeyDown={e => e.key === "Enter" && handleActivate()}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "#f1f5f9",
+                    fontSize: 13,
+                    fontFamily: "monospace",
+                    outline: "none",
+                    marginBottom: 12,
+                  }}
+                />
+                <button
+                  onClick={handleActivate}
+                  disabled={!licenseKey.trim() || activating}
+                  style={{
+                    width: "100%",
+                    padding: 12,
+                    borderRadius: 10,
+                    border: "none",
+                    background: licenseKey.trim()
+                      ? "linear-gradient(135deg, #3b82f6, #6366f1)"
+                      : "rgba(255,255,255,0.05)",
+                    color: licenseKey.trim() ? "white" : "#334155",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: licenseKey.trim() ? "pointer" : "not-allowed",
+                    opacity: activating ? 0.7 : 1,
+                  }}
+                >
+                  {activating ? "Vérification..." : "Activer"}
+                </button>
+              </div>
 
-                    {/* CTA si FREE */}
-                    {!premium?.is_premium && (
-                      <motion.button
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => setTab("activate")}
-                        style={{
-                          marginTop: 8,
-                          width: "100%", padding: "10px 0",
-                          borderRadius: 8, border: "none", cursor: "pointer",
-                          fontSize: 12, fontWeight: 700,
-                          background: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
-                          color: "white",
-                          boxShadow: "0 4px 16px rgba(245,158,11,0.35)",
-                        }}
-                      >
-                        Activer Premium →
-                      </motion.button>
-                    )}
-
-                    {/* Statut si PREMIUM */}
-                    {premium?.is_premium && (
-                      <div style={{
-                        marginTop: 8, padding: "10px 12px", borderRadius: 8,
-                        background: "rgba(52,211,153,0.07)",
-                        border: "1px solid rgba(52,211,153,0.2)",
-                        display: "flex", alignItems: "center", gap: 8,
-                      }}>
-                        <Check size={12} color="#34d399" />
-                        <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#34d399" }}>
-                          Licence Premium active
-                        </span>
-                        <Clock size={10} color="#475569" />
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* ── Onglet Activer ── */}
-                {tab === "activate" && !premium?.is_premium && (
-                  <motion.div
-                    key="activate"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.18 }}
-                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
-                  >
-                    {/* Section Demo */}
-                    <div style={{
-                      padding: "14px",
-                      background: "linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.05))",
-                      borderRadius: 12,
-                      border: "1px solid rgba(139,92,246,0.2)",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                        <Sparkles size={16} color="#8b5cf6" />
-                        <div>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: "#a78bfa", margin: 0 }}>
-                            Essai gratuit - 7 jours
-                          </p>
-                          <p style={{ fontSize: 10, color: "#64748b", margin: "2px 0 0 0" }}>
-                            Testez toutes les fonctionnalités
-                          </p>
-                        </div>
-                      </div>
-
-                      {demoKey && (
-                        <div style={{
-                          background: "rgba(0,0,0,0.3)",
-                          borderRadius: 6,
-                          padding: "8px 10px",
-                          marginBottom: 10,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                        }}>
-                          <code style={{
-                            flex: 1,
-                            fontSize: 9,
-                            fontFamily: "monospace",
-                            color: "#94a3b8",
-                            wordBreak: "break-all",
-                          }}>
-                            {demoKey}
-                          </code>
-                          <button
-                            onClick={handleCopyKey}
-                            style={{
-                              background: "rgba(255,255,255,0.06)",
-                              border: "none",
-                              borderRadius: 4,
-                              padding: "4px 6px",
-                              cursor: "pointer",
-                              color: copied ? "#34d399" : "#64748b",
-                              transition: "all 0.15s",
-                            }}
-                          >
-                            <Copy size={12} />
-                          </button>
-                        </div>
-                      )}
-
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleActivateDemo}
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          borderRadius: 8,
-                          border: "none",
-                          cursor: "pointer",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
-                          color: "white",
-                          boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 6,
-                        }}
-                      >
-                        <Zap size={12} />
-                        Activer la démo
-                      </motion.button>
-                    </div>
-
-                    {/* Séparateur */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                      <span style={{ fontSize: 10, color: "#334155" }}>ou</span>
-                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                    </div>
-
-                    {/* Section Clé manuelle */}
-                    <div style={{
-                      padding: "14px",
-                      borderRadius: 12,
-                      background: "rgba(255,255,255,0.025)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 12,
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <Lock size={14} color="#64748b" />
-                        <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", margin: 0 }}>
-                          Clé de licence
-                        </p>
-                      </div>
-
-                      <input
-                        type="text"
-                        value={licenseKey}
-                        onChange={e => setLicenseKey(e.target.value)}
-                        placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX"
-                        onKeyDown={e => e.key === "Enter" && handleActivate()}
-                        style={{
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 8,
-                          padding: "10px 12px",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: "#f1f5f9",
-                          outline: "none",
-                          width: "100%",
-                          letterSpacing: "0.04em",
-                          caretColor: "#3b82f6",
-                          fontFamily: "monospace",
-                        }}
-                        onFocus={e => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.5)")}
-                        onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
-                      />
-
-                      <motion.button
-                        whileHover={{ scale: licenseKey.trim() ? 1.01 : 1 }}
-                        whileTap={{ scale: licenseKey.trim() ? 0.99 : 1 }}
-                        onClick={handleActivate}
-                        disabled={!licenseKey.trim() || activating}
-                        style={{
-                          padding: "10px 0",
-                          borderRadius: 8,
-                          border: "none",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          cursor: !licenseKey.trim() ? "not-allowed" : "pointer",
-                          background: licenseKey.trim()
-                            ? "linear-gradient(135deg, #3b82f6, #6366f1)"
-                            : "rgba(255,255,255,0.05)",
-                          color: licenseKey.trim() ? "white" : "#334155",
-                          boxShadow: licenseKey.trim() ? "0 4px 16px rgba(59,130,246,0.3)" : "none",
-                          opacity: activating ? 0.7 : 1,
-                          transition: "all 0.2s",
-                        }}
-                      >
-                        {activating ? "Vérification..." : "Activer"}
-                      </motion.button>
-                    </div>
-
-                    {/* Info */}
-                    <p style={{ fontSize: 10, color: "#1e293b", textAlign: "center", margin: 0 }}>
-                      Activation locale • Aucune connexion requise
-                    </p>
-                  </motion.div>
-                )}
-
-              </AnimatePresence>
+              {/* Back to compare */}
+              <button
+                onClick={() => setTab("compare")}
+                style={{
+                  width: "100%",
+                  marginTop: 16,
+                  padding: 10,
+                  background: "none",
+                  border: "none",
+                  color: "#475569",
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                ← Retourner à la comparaison
+              </button>
             </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
