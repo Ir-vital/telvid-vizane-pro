@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, FolderOpen, FolderEdit, RotateCcw, Globe, Zap, HardDrive, Crown } from "lucide-react";
+import { X, FolderOpen, FolderEdit, RotateCcw, Globe, Zap, HardDrive, Crown, Copy, Key, Monitor } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDownloadStore } from "../stores/downloadStore";
 import { tauriApi } from "../lib/tauri";
@@ -18,15 +18,26 @@ export function Settings() {
 
   const [currentPath, setCurrentPath] = useState(outputPath || "");
   const [loading, setLoading] = useState(false);
+  const [machineId, setMachineId] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
-  // Charge le dossier actuel à l'ouverture
+  // Charge le dossier actuel et le machine ID à l'ouverture
   useEffect(() => {
     if (!settingsOpen) return;
     tauriApi.getDownloadDir().then((p) => {
       setCurrentPath(p);
       setOutputPath(p);
     }).catch(console.error);
+    tauriApi.getMachineId().then(setMachineId).catch(console.error);
   }, [settingsOpen]);
+
+  const handleCopyMachineId = () => {
+    if (machineId) {
+      navigator.clipboard.writeText(machineId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleOpenFolder = () => {
     tauriApi.openDownloadDir().catch(console.error);
@@ -262,6 +273,65 @@ export function Settings() {
                       </button>
                     </div>
                   )}
+                </Section>
+
+                {/* ── Section Licence ── */}
+                <Section icon={<Key size={15} />} title="Licence">
+                  {/* Statut actuel */}
+                  <div style={{
+                    padding: 12,
+                    background: premium?.is_premium ? "rgba(52,211,153,0.08)" : "rgba(255,255,255,0.03)",
+                    borderRadius: 10,
+                    marginBottom: 12,
+                    border: `1px solid ${premium?.is_premium ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.06)"}`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Monitor size={16} color={premium?.is_premium ? "#34d399" : "#64748b"} />
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 11, color: "#475569", margin: 0 }}>Machine ID</p>
+                        <code style={{ fontSize: 10, color: "#64748b", fontFamily: "monospace" }}>
+                          {machineId || "Chargement..."}
+                        </code>
+                      </div>
+                      <button
+                        onClick={handleCopyMachineId}
+                        title="Copier"
+                        style={{
+                          background: "rgba(255,255,255,0.06)",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "6px 8px",
+                          cursor: "pointer",
+                          color: copied ? "#34d399" : "#64748b",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Copy size={14} />
+                      </button>
+                    </div>
+                    {premium?.is_premium && (
+                      <div style={{
+                        marginTop: 10,
+                        paddingTop: 10,
+                        borderTop: "1px solid rgba(255,255,255,0.06)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}>
+                        <Zap size={12} color="#f59e0b" />
+                        <span style={{ fontSize: 11, color: premium.license_type === "demo" ? "#a78bfa" : "#34d399" }}>
+                          {premium.license_type === "demo" 
+                            ? `Licence Démo - ${premium.days_remaining} jours restants`
+                            : "Licence Premium à vie"
+                          }
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ fontSize: 10, color: "#334155", margin: 0, lineHeight: 1.5 }}>
+                    Pour obtenir une licence Premium, envoyez ce Machine ID au développeur avec votre preuve de paiement.
+                  </p>
                 </Section>
 
                 {/* ── Section Langue ── */}

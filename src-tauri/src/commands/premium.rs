@@ -399,6 +399,40 @@ pub fn get_license_info() -> Result<PremiumStatus, String> {
     Ok(check_premium_status())
 }
 
+// ─── Génération de clés pour le vendeur ──────────────────────────────────────
+
+#[tauri::command]
+pub fn get_machine_id() -> String {
+    crate::commands::premium::get_machine_id()
+}
+
+#[tauri::command]
+pub fn generate_license_for_machine(
+    machine_id: String,
+    license_type: String,
+    duration_days: u32,
+) -> Result<String, String> {
+    // Cette commande permet au vendeur de générer une clé pour une machine spécifique
+    // Elle ne devrait être appelée que via un système sécurisé (API backend)
+    
+    let expiry_timestamp = if duration_days == 0 {
+        0
+    } else {
+        current_timestamp() + (duration_days as u64 * 24 * 60 * 60)
+    };
+
+    // Génère un hash unique pour cette clé
+    let key_hash = {
+        let mut hasher = DefaultHasher::new();
+        format!("{}:{}:{}", machine_id, license_type, current_timestamp()).hash(&mut hasher);
+        format!("{:016x}", hasher.finish())
+    };
+
+    let payload = format!("{}:{}:{}:{}", license_type, expiry_timestamp, machine_id, key_hash);
+    let signature = generate_signature(&payload);
+    format!("{}:{}", payload, signature)
+}
+
 // ─── Parsing des clés ──────────────────────────────────────────────────────────
 
 fn parse_license_key(key: &str) -> (Option<String>, u32) {

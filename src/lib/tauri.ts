@@ -92,6 +92,9 @@ export const tauriApi = {
   deactivateLicense: () => invoke<boolean>("deactivate_license"),
   generateDemoLicense: (days: number) => invoke<string>("generate_demo_license", { days }),
   getLicenseInfo: () => invoke<PremiumStatus>("get_license_info"),
+  getMachineId: () => invoke<string>("get_machine_id"),
+  generateLicenseForMachine: (machineId: string, licenseType: string, durationDays: number) => 
+    invoke<string>("generate_license_for_machine", { machine_id: machineId, license_type: licenseType, duration_days: durationDays }),
   refreshLibraryMetadata: () => invoke<number>("refresh_library_metadata"),
   getDownloadDir: () => invoke<string>("get_download_dir"),
   setDownloadDir: (path: string) => invoke<string>("set_download_dir", { path }),

@@ -33,6 +33,8 @@ pub fn run() {
             commands::premium::deactivate_license,
             commands::premium::generate_demo_license,
             commands::premium::get_license_info,
+            commands::premium::get_machine_id,
+            commands::premium::generate_license_for_machine,
             commands::settings::get_download_dir,
             commands::settings::set_download_dir,
             commands::settings::open_download_dir,
