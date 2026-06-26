@@ -55,6 +55,7 @@ fn get_used_keys_path() -> std::path::PathBuf {
 
 // ─── Machine ID ───────────────────────────────────────────────────────────────
 
+#[tauri::command]
 pub fn get_machine_id() -> String {
     let path = get_machine_id_path();
     
