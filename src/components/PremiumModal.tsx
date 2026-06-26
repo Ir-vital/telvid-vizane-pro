@@ -44,15 +44,6 @@ const FEATURES = [
   },
 ];
 
-// ─── Formats de clés supportés ──────────────────────────────────────────────
-
-const KEY_FORMATS = [
-  { format: "DEMO", desc: "Licence démo (7 jours)" },
-  { format: "PREM-XXXXXXXX", desc: "Licence premium (1 an)" },
-  { format: "FULL-XXXXXXXX", desc: "Licence premium (à vie)" },
-  { format: "XXXXXXXXXXXXXXXX", desc: "Clé alphanumérique (16+ caractères)" },
-];
-
 // ─── PremiumModal ─────────────────────────────────────────────────────────────
 
 export function PremiumModal() {
@@ -153,11 +144,12 @@ export function PremiumModal() {
               position: "fixed",
               top: "50%", left: "50%",
               transform: "translate(-50%, -50%)",
-              width: 540,
-              maxHeight: "85vh",
+              width: "90vw",
+              maxWidth: 480,
+              maxHeight: "90vh",
               zIndex: 301,
               background: "var(--layer-1)",
-              borderRadius: 22,
+              borderRadius: 20,
               border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 24px 80px rgba(0,0,0,0.6)",
               display: "flex",
@@ -169,12 +161,13 @@ export function PremiumModal() {
             <div style={{
               height: 3,
               background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #f59e0b, #06b6d4)",
+              flexShrink: 0,
             }} />
 
             {/* Header */}
             <div style={{
-              padding: "24px 28px 20px 28px",
-              display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+              padding: "16px 20px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
               flexShrink: 0,
             }}>
               <div>
@@ -226,9 +219,9 @@ export function PremiumModal() {
             {/* Tabs - seulement si pas premium */}
             {!premium?.is_premium && (
               <div style={{
-                display: "flex", margin: "0 28px 20px 28px",
+                display: "flex", margin: "0 20px 12px 20px",
                 background: "rgba(255,255,255,0.04)",
-                borderRadius: 10, padding: 3,
+                borderRadius: 8, padding: 3,
                 flexShrink: 0,
               }}>
                 {[
@@ -239,8 +232,8 @@ export function PremiumModal() {
                     key={t.key}
                     onClick={() => setTab(t.key as "compare" | "activate")}
                     style={{
-                      flex: 1, padding: "8px 0", borderRadius: 8,
-                      fontSize: 12, fontWeight: 600, cursor: "pointer",
+                      flex: 1, padding: "6px 0", borderRadius: 6,
+                      fontSize: 11, fontWeight: 600, cursor: "pointer",
                       border: "none", transition: "all 0.18s",
                       background: tab === t.key ? "rgba(255,255,255,0.08)" : "transparent",
                       color: tab === t.key ? "#f1f5f9" : "#475569",
@@ -253,8 +246,13 @@ export function PremiumModal() {
               </div>
             )}
 
-            {/* Content */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "0 28px 28px 28px" }}>
+            {/* Content - scrollable */}
+            <div style={{ 
+              flex: 1, 
+              minHeight: 0,  // Important pour que flex shrink fonctionne
+              overflowY: "auto", 
+              padding: "0 20px 20px 20px" 
+            }}>
               <AnimatePresence mode="wait">
 
                 {/* ── Onglet Comparer ── */}
@@ -265,18 +263,18 @@ export function PremiumModal() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 10 }}
                     transition={{ duration: 0.18 }}
-                    style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
                   >
                     {/* En-têtes colonnes */}
-                    <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                    <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>
                       <div style={{ flex: 1 }} />
-                      <div style={{ width: 100, textAlign: "center" }}>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      <div style={{ width: 80, textAlign: "center" }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                           Gratuit
                         </span>
                       </div>
-                      <div style={{ width: 120, textAlign: "center" }}>
-                        <span style={{ fontSize: 10, fontWeight: 600, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      <div style={{ width: 100, textAlign: "center" }}>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                           Premium
                         </span>
                       </div>
@@ -287,14 +285,14 @@ export function PremiumModal() {
                       <motion.div
                         key={i}
                         style={{
-                          display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
-                          background: "rgba(255,255,255,0.025)", borderRadius: 10,
+                          display: "flex", alignItems: "center", gap: 6, padding: "8px 10px",
+                          background: "rgba(255,255,255,0.025)", borderRadius: 8,
                           border: "1px solid rgba(255,255,255,0.05)",
                         }}
                       >
-                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
                           <div style={{
-                            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                            width: 26, height: 26, borderRadius: 6, flexShrink: 0,
                             background: `${f.color}15`,
                             border: `1px solid ${f.color}25`,
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -302,19 +300,19 @@ export function PremiumModal() {
                           }}>
                             {f.icon}
                           </div>
-                          <span style={{ fontSize: 13, fontWeight: 500, color: "#94a3b8" }}>
+                          <span style={{ fontSize: 12, fontWeight: 500, color: "#94a3b8" }}>
                             {f.title}
                           </span>
                         </div>
-                        <div style={{ width: 100, textAlign: "center" }}>
-                          <span style={{ fontSize: 11, color: "#475569" }}>{f.free}</span>
+                        <div style={{ width: 80, textAlign: "center" }}>
+                          <span style={{ fontSize: 10, color: "#475569" }}>{f.free}</span>
                         </div>
                         <div style={{
-                          width: 120, textAlign: "center",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                          width: 100, textAlign: "center",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                         }}>
-                          <Check size={12} color="#34d399" />
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9" }}>
+                          <Check size={10} color="#34d399" />
+                          <span style={{ fontSize: 10, fontWeight: 600, color: "#f1f5f9" }}>
                             {f.premium}
                           </span>
                         </div>
@@ -329,12 +327,12 @@ export function PremiumModal() {
                         onClick={() => setTab("activate")}
                         style={{
                           marginTop: 8,
-                          width: "100%", padding: "14px 0",
-                          borderRadius: 13, border: "none", cursor: "pointer",
-                          fontSize: 14, fontWeight: 700,
+                          width: "100%", padding: "12px 0",
+                          borderRadius: 10, border: "none", cursor: "pointer",
+                          fontSize: 13, fontWeight: 700,
                           background: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
                           color: "white",
-                          boxShadow: "0 4px 24px rgba(245,158,11,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
+                          boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
                         }}
                       >
                         Activer Premium →
@@ -344,22 +342,22 @@ export function PremiumModal() {
                     {/* Statut si PREMIUM */}
                     {premium?.is_premium && (
                       <div style={{
-                        marginTop: 8, padding: "16px 18px", borderRadius: 13,
+                        marginTop: 8, padding: "12px 14px", borderRadius: 10,
                         background: "rgba(52,211,153,0.07)",
                         border: "1px solid rgba(52,211,153,0.2)",
-                        display: "flex", alignItems: "center", gap: 12,
+                        display: "flex", alignItems: "center", gap: 10,
                       }}>
-                        <Check size={18} color="#34d399" />
+                        <Check size={14} color="#34d399" />
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "#34d399", margin: 0 }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: "#34d399", margin: 0 }}>
                             Licence Premium active
                           </p>
-                          <p style={{ fontSize: 11, color: "#475569", margin: "3px 0 0 0" }}>
-                            Toutes les fonctionnalités sont débloquées
+                          <p style={{ fontSize: 10, color: "#475569", margin: "2px 0 0 0" }}>
+                            Toutes les fonctionnalités débloquées
                           </p>
                         </div>
-                        <Clock size={14} color="#475569" />
-                        <span style={{ fontSize: 11, color: "#475569" }}>
+                        <Clock size={12} color="#475569" />
+                        <span style={{ fontSize: 10, color: "#475569" }}>
                           {formatExpiryDate(premium.expires_at)}
                         </span>
                       </div>
@@ -375,23 +373,23 @@ export function PremiumModal() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                     transition={{ duration: 0.18 }}
-                    style={{ display: "flex", flexDirection: "column", gap: 20 }}
+                    style={{ display: "flex", flexDirection: "column", gap: 14 }}
                   >
                     {/* Section Demo */}
                     <div style={{
-                      padding: "18px",
+                      padding: "14px",
                       background: "linear-gradient(135deg, rgba(139,92,246,0.1), rgba(59,130,246,0.05))",
-                      borderRadius: 14,
+                      borderRadius: 12,
                       border: "1px solid rgba(139,92,246,0.2)",
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                        <Sparkles size={18} color="#8b5cf6" />
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                        <Sparkles size={16} color="#8b5cf6" />
                         <div>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "#a78bfa", margin: 0 }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: "#a78bfa", margin: 0 }}>
                             Essai gratuit - 7 jours
                           </p>
-                          <p style={{ fontSize: 11, color: "#64748b", margin: "2px 0 0 0" }}>
-                            Testez toutes les fonctionnalités Premium
+                          <p style={{ fontSize: 10, color: "#64748b", margin: "2px 0 0 0" }}>
+                            Testez toutes les fonctionnalités
                           </p>
                         </div>
                       </div>
@@ -399,16 +397,16 @@ export function PremiumModal() {
                       {demoKey && (
                         <div style={{
                           background: "rgba(0,0,0,0.3)",
-                          borderRadius: 8,
-                          padding: "10px 12px",
-                          marginBottom: 12,
+                          borderRadius: 6,
+                          padding: "8px 10px",
+                          marginBottom: 10,
                           display: "flex",
                           alignItems: "center",
-                          gap: 8,
+                          gap: 6,
                         }}>
                           <code style={{
                             flex: 1,
-                            fontSize: 10,
+                            fontSize: 9,
                             fontFamily: "monospace",
                             color: "#94a3b8",
                             wordBreak: "break-all",
@@ -420,14 +418,14 @@ export function PremiumModal() {
                             style={{
                               background: "rgba(255,255,255,0.06)",
                               border: "none",
-                              borderRadius: 6,
-                              padding: "6px 8px",
+                              borderRadius: 4,
+                              padding: "4px 6px",
                               cursor: "pointer",
                               color: copied ? "#34d399" : "#64748b",
                               transition: "all 0.15s",
                             }}
                           >
-                            <Copy size={14} />
+                            <Copy size={12} />
                           </button>
                         </div>
                       )}
@@ -438,53 +436,48 @@ export function PremiumModal() {
                         onClick={handleActivateDemo}
                         style={{
                           width: "100%",
-                          padding: "12px",
-                          borderRadius: 10,
+                          padding: "10px",
+                          borderRadius: 8,
                           border: "none",
                           cursor: "pointer",
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: 700,
                           background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
                           color: "white",
-                          boxShadow: "0 4px 16px rgba(139,92,246,0.3)",
+                          boxShadow: "0 4px 12px rgba(139,92,246,0.3)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 8,
+                          gap: 6,
                         }}
                       >
-                        <Zap size={14} />
-                        Activer la licence démo
+                        <Zap size={12} />
+                        Activer la démo
                       </motion.button>
                     </div>
 
                     {/* Séparateur */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-                      <span style={{ fontSize: 11, color: "#334155" }}>ou</span>
+                      <span style={{ fontSize: 10, color: "#334155" }}>ou</span>
                       <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
                     </div>
 
                     {/* Section Clé manuelle */}
                     <div style={{
-                      padding: "20px",
-                      borderRadius: 14,
+                      padding: "14px",
+                      borderRadius: 12,
                       background: "rgba(255,255,255,0.025)",
                       border: "1px solid rgba(255,255,255,0.07)",
                       display: "flex",
                       flexDirection: "column",
-                      gap: 16,
+                      gap: 12,
                     }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Lock size={16} color="#64748b" />
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", margin: 0 }}>
-                            Clé de licence
-                          </p>
-                          <p style={{ fontSize: 11, color: "#334155", margin: "3px 0 0 0" }}>
-                            Entrez votre clé d&apos;achat
-                          </p>
-                        </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Lock size={14} color="#64748b" />
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", margin: 0 }}>
+                          Clé de licence
+                        </p>
                       </div>
 
                       <input
@@ -496,9 +489,9 @@ export function PremiumModal() {
                         style={{
                           background: "rgba(255,255,255,0.05)",
                           border: "1px solid rgba(255,255,255,0.1)",
-                          borderRadius: 10,
-                          padding: "12px 16px",
-                          fontSize: 13,
+                          borderRadius: 8,
+                          padding: "10px 12px",
+                          fontSize: 12,
                           fontWeight: 600,
                           color: "#f1f5f9",
                           outline: "none",
@@ -517,47 +510,27 @@ export function PremiumModal() {
                         onClick={handleActivate}
                         disabled={!licenseKey.trim() || activating}
                         style={{
-                          padding: "13px 0",
-                          borderRadius: 11,
+                          padding: "10px 0",
+                          borderRadius: 8,
                           border: "none",
-                          fontSize: 13,
+                          fontSize: 12,
                           fontWeight: 700,
                           cursor: !licenseKey.trim() ? "not-allowed" : "pointer",
                           background: licenseKey.trim()
                             ? "linear-gradient(135deg, #3b82f6, #6366f1)"
                             : "rgba(255,255,255,0.05)",
                           color: licenseKey.trim() ? "white" : "#334155",
-                          boxShadow: licenseKey.trim() ? "0 4px 20px rgba(59,130,246,0.35)" : "none",
+                          boxShadow: licenseKey.trim() ? "0 4px 16px rgba(59,130,246,0.3)" : "none",
                           opacity: activating ? 0.7 : 1,
                           transition: "all 0.2s",
                         }}
                       >
-                        {activating ? "Vérification..." : "Activer la licence"}
+                        {activating ? "Vérification..." : "Activer"}
                       </motion.button>
                     </div>
 
-                    {/* Formats de clés */}
-                    <div style={{
-                      padding: "14px 16px",
-                      borderRadius: 10,
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid rgba(255,255,255,0.04)",
-                    }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#334155", margin: "0 0 10px 0", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                        Formats acceptés
-                      </p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {KEY_FORMATS.map((kf, i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <code style={{ fontSize: 11, color: "#475569", fontFamily: "monospace" }}>{kf.format}</code>
-                            <span style={{ fontSize: 10, color: "#334155" }}>{kf.desc}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Info */}
-                    <p style={{ fontSize: 11, color: "#1e293b", textAlign: "center", lineHeight: 1.6, margin: 0 }}>
+                    <p style={{ fontSize: 10, color: "#1e293b", textAlign: "center", margin: 0 }}>
                       Activation locale • Aucune connexion requise
                     </p>
                   </motion.div>
