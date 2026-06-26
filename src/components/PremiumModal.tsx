@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap, Check, Lock, Download, Layers, Shield, Star, Copy, Sparkles, Clock } from "lucide-react";
+import { X, Zap, Check, Lock, Download, Layers, Copy, Sparkles, Clock } from "lucide-react";
 import { useDownloadStore } from "../stores/downloadStore";
 import { tauriApi } from "../lib/tauri";
 
@@ -8,39 +8,25 @@ import { tauriApi } from "../lib/tauri";
 
 const FEATURES = [
   {
-    icon: <Layers size={16} />,
-    title: "Téléchargements simultanés",
-    free: "2 à la fois",
-    premium: "Jusqu'à 5",
-    color: "#3b82f6",
-  },
-  {
-    icon: <Zap size={16} />,
-    title: "Mode Turbo",
-    free: "Désactivé",
-    premium: "16 fragments",
-    color: "#f59e0b",
-  },
-  {
-    icon: <Download size={16} />,
-    title: "Qualité vidéo",
-    free: "480p max",
-    premium: "1080p + illimité",
+    icon: <Download size={12} />,
+    title: "Qualité",
+    free: "480p",
+    premium: "1080p+",
     color: "#8b5cf6",
   },
   {
-    icon: <Star size={16} />,
-    title: "Priorité de téléchargement",
-    free: "Standard",
-    premium: "Haute priorité",
-    color: "#06b6d4",
+    icon: <Layers size={12} />,
+    title: "Simultanés",
+    free: "2",
+    premium: "5",
+    color: "#3b82f6",
   },
   {
-    icon: <Shield size={16} />,
-    title: "Conversions FFmpeg",
-    free: "Basique",
-    premium: "Accélérée",
-    color: "#34d399",
+    icon: <Zap size={12} />,
+    title: "Turbo",
+    free: "✗",
+    premium: "✓",
+    color: "#f59e0b",
   },
 ];
 
@@ -249,9 +235,9 @@ export function PremiumModal() {
             {/* Content - scrollable */}
             <div style={{ 
               flex: 1, 
-              minHeight: 0,  // Important pour que flex shrink fonctionne
+              minHeight: 0,
               overflowY: "auto", 
-              padding: "0 20px 20px 20px" 
+              padding: "0 16px 16px 16px" 
             }}>
               <AnimatePresence mode="wait">
 
@@ -263,60 +249,36 @@ export function PremiumModal() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 10 }}
                     transition={{ duration: 0.18 }}
-                    style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                    style={{ display: "flex", flexDirection: "column", gap: 6 }}
                   >
-                    {/* En-têtes colonnes */}
-                    <div style={{ display: "flex", gap: 6, marginBottom: 4 }}>
-                      <div style={{ flex: 1 }} />
-                      <div style={{ width: 80, textAlign: "center" }}>
-                        <span style={{ fontSize: 9, fontWeight: 600, color: "#475569", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                          Gratuit
-                        </span>
-                      </div>
-                      <div style={{ width: 100, textAlign: "center" }}>
-                        <span style={{ fontSize: 9, fontWeight: 600, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                          Premium
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Lignes de features */}
+                    {/* Lignes de features - compact */}
                     {FEATURES.map((f, i) => (
-                      <motion.div
+                      <div
                         key={i}
                         style={{
-                          display: "flex", alignItems: "center", gap: 6, padding: "8px 10px",
+                          display: "flex", alignItems: "center", gap: 10, padding: "8px 10px",
                           background: "rgba(255,255,255,0.025)", borderRadius: 8,
                           border: "1px solid rgba(255,255,255,0.05)",
                         }}
                       >
-                        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{
-                            width: 26, height: 26, borderRadius: 6, flexShrink: 0,
-                            background: `${f.color}15`,
-                            border: `1px solid ${f.color}25`,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            color: f.color,
-                          }}>
-                            {f.icon}
-                          </div>
-                          <span style={{ fontSize: 12, fontWeight: 500, color: "#94a3b8" }}>
-                            {f.title}
-                          </span>
-                        </div>
-                        <div style={{ width: 80, textAlign: "center" }}>
-                          <span style={{ fontSize: 10, color: "#475569" }}>{f.free}</span>
-                        </div>
                         <div style={{
-                          width: 100, textAlign: "center",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                          width: 24, height: 24, borderRadius: 6, flexShrink: 0,
+                          background: `${f.color}15`,
+                          border: `1px solid ${f.color}25`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: f.color,
                         }}>
-                          <Check size={10} color="#34d399" />
-                          <span style={{ fontSize: 10, fontWeight: 600, color: "#f1f5f9" }}>
-                            {f.premium}
-                          </span>
+                          {f.icon}
                         </div>
-                      </motion.div>
+                        <span style={{ flex: 1, fontSize: 12, fontWeight: 500, color: "#94a3b8" }}>
+                          {f.title}
+                        </span>
+                        <span style={{ fontSize: 11, color: "#475569", minWidth: 50, textAlign: "center" }}>{f.free}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 60, justifyContent: "flex-end" }}>
+                          <Check size={10} color="#34d399" />
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "#f1f5f9" }}>{f.premium}</span>
+                        </div>
+                      </div>
                     ))}
 
                     {/* CTA si FREE */}
@@ -327,12 +289,12 @@ export function PremiumModal() {
                         onClick={() => setTab("activate")}
                         style={{
                           marginTop: 8,
-                          width: "100%", padding: "12px 0",
-                          borderRadius: 10, border: "none", cursor: "pointer",
-                          fontSize: 13, fontWeight: 700,
+                          width: "100%", padding: "10px 0",
+                          borderRadius: 8, border: "none", cursor: "pointer",
+                          fontSize: 12, fontWeight: 700,
                           background: "linear-gradient(135deg, #f59e0b 0%, #f97316 100%)",
                           color: "white",
-                          boxShadow: "0 4px 20px rgba(245,158,11,0.35)",
+                          boxShadow: "0 4px 16px rgba(245,158,11,0.35)",
                         }}
                       >
                         Activer Premium →
@@ -342,24 +304,16 @@ export function PremiumModal() {
                     {/* Statut si PREMIUM */}
                     {premium?.is_premium && (
                       <div style={{
-                        marginTop: 8, padding: "12px 14px", borderRadius: 10,
+                        marginTop: 8, padding: "10px 12px", borderRadius: 8,
                         background: "rgba(52,211,153,0.07)",
                         border: "1px solid rgba(52,211,153,0.2)",
-                        display: "flex", alignItems: "center", gap: 10,
+                        display: "flex", alignItems: "center", gap: 8,
                       }}>
-                        <Check size={14} color="#34d399" />
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: "#34d399", margin: 0 }}>
-                            Licence Premium active
-                          </p>
-                          <p style={{ fontSize: 10, color: "#475569", margin: "2px 0 0 0" }}>
-                            Toutes les fonctionnalités débloquées
-                          </p>
-                        </div>
-                        <Clock size={12} color="#475569" />
-                        <span style={{ fontSize: 10, color: "#475569" }}>
-                          {formatExpiryDate(premium.expires_at)}
+                        <Check size={12} color="#34d399" />
+                        <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#34d399" }}>
+                          Licence Premium active
                         </span>
+                        <Clock size={10} color="#475569" />
                       </div>
                     )}
                   </motion.div>
