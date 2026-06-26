@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { tauriApi, tauriEvents } from "../lib/tauri";
 import { useDownloadStore } from "../stores/downloadStore";
-import { useTranslation } from "react-i18next";
 
 export function useDownload() {
-  const { t } = useTranslation();
   const {
     setVideoInfo, setIsAnalyzing, setAnalyzeError,
     setDownloadPhase, addDownload, updateDownloadProgress,
@@ -91,8 +89,10 @@ export function useDownload() {
     const { videoInfo, currentUrl } = useDownloadStore.getState();
     if (!videoInfo || !currentUrl) return;
 
-    if (formatId.includes("1080") && !premium?.is_premium) {
-      addToast({ message: t("premium.limit_480p"), type: "error" });
+    // Vérifie si le format est premium (HD Maximum = format 0)
+    const isPremiumFormat = formatId === "bestvideo+bestaudio/best";
+    if (isPremiumFormat && !premium?.is_premium) {
+      addToast({ message: "Le format HD Maximum nécessite Premium", type: "error" });
       return;
     }
 

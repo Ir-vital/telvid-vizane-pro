@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Download, Settings2 } from "lucide-react";
 import { SearchBar } from "./components/SearchBar";
@@ -18,21 +18,36 @@ import { tauriApi } from "./lib/tauri";
 function PremiumBadge() {
   const { premium, setPremiumOpen } = useDownloadStore();
   if (!premium) return null;
+  
+  // Déterminer le texte du badge
+  let badgeText = "FREE";
+  let badgeStyle: React.CSSProperties = { background: 'rgba(255,255,255,0.04)', color: '#475569', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' };
+  
+  if (premium.is_premium) {
+    if (premium.license_type === "demo") {
+      badgeText = `⚡ DÉMO • ${premium.days_remaining}j`;
+      badgeStyle = { background: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: '1px solid rgba(139,92,246,0.25)', cursor: 'default' };
+    } else if (premium.days_remaining === -1 || premium.days_remaining > 365) {
+      badgeText = "⚡ PREMIUM ∞";
+      badgeStyle = { background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)', cursor: 'default' };
+    } else {
+      badgeText = `⚡ PREMIUM • ${premium.days_remaining}j`;
+      badgeStyle = { background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)', cursor: 'default' };
+    }
+  }
+  
   return (
     <button
       onClick={() => !premium.is_premium && setPremiumOpen(true)}
       style={{
-        ...(premium.is_premium
-          ? { background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)', cursor: 'default' }
-          : { background: 'rgba(255,255,255,0.04)', color: '#475569', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }
-        ),
+        ...badgeStyle,
         fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
         letterSpacing: '0.05em', transition: 'all 0.18s',
       }}
       onMouseEnter={e => { if (!premium.is_premium) { (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.18)'; } }}
       onMouseLeave={e => { if (!premium.is_premium) { (e.currentTarget as HTMLButtonElement).style.color = '#475569'; (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; } }}
     >
-      {premium.is_premium ? "⚡ PREMIUM" : "FREE"}
+      {badgeText}
     </button>
   );
 }
@@ -40,9 +55,21 @@ function PremiumBadge() {
 export default function App() {
   const { setCurrentUrl, setOutputPath, setSettingsOpen } = useDownloadStore();
   const { analyzeUrl } = useDownload();
+  const downloadQueueRef = useRef<HTMLDivElement>(null);
   
   // Charge le statut Premium au démarrage
   usePremium();
+  
+  // Scroll automatique vers la queue de téléchargement quand un DL démarre
+  useEffect(() => {
+    const { activeDownloads } = useDownloadStore.getState();
+    if (activeDownloads.length > 0) {
+      // Petit délai pour laisser l'animation se faire
+      setTimeout(() => {
+        downloadQueueRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, []);
 
   // Charge le dossier de téléchargement au démarrage
   useEffect(() => {
@@ -146,7 +173,9 @@ export default function App() {
             <SearchBar />
             <PremiumBanner />
             <VideoInfoCard />
-            <DownloadQueue />
+            <div ref={downloadQueueRef}>
+              <DownloadQueue />
+            </div>
           </motion.div>
         </main>
 
